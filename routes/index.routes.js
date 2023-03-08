@@ -1,8 +1,15 @@
 const express = require("express");
 const router = express.Router();
+const { isAuthenticated } = require("../middleware/auth.middleware");
 
+// all routes beyond this point need authentication
+router.use(isAuthenticated);
+
+/**
+ * Absolute path: /api/
+ */
 router.get("/", (req, res, next) => {
-  res.json("All good in here");
+  res.sendStatus(200);
 });
 
 module.exports = router;
