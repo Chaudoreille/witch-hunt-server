@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const jsonwebtoken = require("jsonwebtoken");
+const jsonWebToken = require("jsonwebtoken");
 
 const User = require("../models/User.model");
 
@@ -14,7 +14,7 @@ router.post("/signup", async (req, res, next) => {
     const { email, password, username, image } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ message: "Please provide username, email and password" });
+      return res.status(400).json({ message: "Required fields: username, email and password" });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -37,6 +37,44 @@ router.post("/signup", async (req, res, next) => {
     const userData = (({ _id, username, email, image }) => ({ _id, username, email, image }))(createdUser);
 
     res.status(201).json({ user: userData });
+  } catch (error) {
+    next(err);
+  }
+});
+
+
+/**
+ * Absolute path: /auth/login
+ * Create and send Authentication Token
+ */
+router.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ message: "Required fields: email and password." });
+      return;
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found." });
+    }
+
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // extract id for payload
+    const payload = (({ _id }) => ({ _id }))(user);
+
+    const authToken = jsonWebToken.sign(payload, process.env.TOKEN_SECRET, {
+      algorithm: "HS256",
+      expiresIn: "6h",
+    });
+
+    res.status(201).json({ authToken });
   } catch (error) {
     next(err);
   }
