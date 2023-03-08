@@ -31,14 +31,14 @@ router.post("/signup", async (req, res, next) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const newUser = await User.create({ email, password: hashedPassword, username, image });
+    const createdUser = await User.create({ email, password: hashedPassword, username, image });
 
     // remove password from newUser before we add it to the response.
     const userData = (({ _id, username, email, image }) => ({ _id, username, email, image }))(createdUser);
 
     res.status(201).json({ user: userData });
   } catch (error) {
-    next(err);
+    next(error);
   }
 });
 
@@ -71,7 +71,7 @@ router.post("/login", async (req, res, next) => {
 
     const authToken = jsonWebToken.sign(payload, process.env.TOKEN_SECRET, {
       algorithm: "HS256",
-      expiresIn: "6h",
+      expiresIn: "2 days",
     });
 
     res.status(201).json({ authToken });
