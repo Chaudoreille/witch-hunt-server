@@ -1,0 +1,50 @@
+const express = require("express");
+const router = express.Router();
+
+const Message = require("../models/Message.model");
+
+
+
+
+
+
+/**
+api/messages?game=gameRoomId&last=timestamp	GET	display list of messages for room	
+ */
+
+router.get('/', async (req, res, next) => {
+    try {
+        const query = {
+            game: req.query.game,
+        }
+        const isValidStamp = new Date(req.query.last).getTime() > 0
+
+        if (!isValidStamp) {
+            res.status(400).send({ message: "Invalid timestamp" })
+        }
+        if (req.query.last && isValidStamp) {
+            query.updatedAt = { $gt: req.query.last };
+        }
+        const messages = await Message.find(query)
+
+        res.json(messages)
+    } catch (error) {
+        next(error)
+    }
+})
+
+/** api/messages	POST		send a message */
+
+router.post('/', async (req, res, next) => {
+    try {
+        const { content, gameId } = req.body
+        const createdMessage = await Message.create({ author: req.user._id, game: gameId, content })
+        res.status(201).json(createdMessage)
+    } catch (error) {
+        next(error)
+    }
+})
+
+
+
+module.exports = router;

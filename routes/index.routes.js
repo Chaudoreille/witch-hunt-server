@@ -12,4 +12,8 @@ router.get("/", (req, res, next) => {
   res.sendStatus(200);
 });
 
+router.use("/game-rooms", require("./gameroom.routes"))
+router.use("/messages", require("./message.routes.js"))
+
+
 module.exports = router;
