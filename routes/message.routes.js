@@ -13,18 +13,20 @@ api/messages?game=gameRoomId&last=timestamp	GET	display list of messages for roo
  */
 
 router.get('/', async (req, res, next) => {
-
-    const query = {
-        game: req.query.game,
-    }
-    const lastSeen = new Date(req.query.last).valueOf()
-
     try {
+        const query = {
+            game: req.query.game,
+        }
+        const isValidStamp = new Date(req.query.last).getTime() > 0
+
+        if (!isValidStamp) {
+            res.status(400).send({ message: "Invalid timestamp" })
+        }
+        if (req.query.last && isValidStamp) {
+            query.updatedAt = { $gt: req.query.last };
+        }
         const messages = await Message.find(query)
-        messages.filter(msg => {
-            const messageTime = new Date(msg.createdAt).valueOf()
-            return messageTime < lastSeen
-        })
+
         res.json(messages)
     } catch (error) {
         next(error)
