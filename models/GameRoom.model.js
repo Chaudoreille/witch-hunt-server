@@ -5,7 +5,7 @@ const gameRoomSchema = new Schema(
   {
     name: {
       type: String,
-      maxLength: 20
+      maxLength: 40
     },
     owner: {
       type: Schema.Types.ObjectId,
