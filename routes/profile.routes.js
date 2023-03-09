@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const { isValidEmail } = require("../utils/utils");
+const { requiredFields } = require("../middleware/validators.middleware");
 const User = require("../models/User.model");
 
 
@@ -45,10 +46,22 @@ router.patch("/", async (req, res, next) => {
 /**
  * Absolute path: /api/profile/
  */
-router.delete("/", (req, res, next) => {
+router.delete("/", requiredFields("password"), async (req, res, next) => {
   try {
     // NOTE: cascade deletion on messages & clean user from room if problems arise.
-    res.sendStatus(204);
+    const user = await User.findById(req.user._id);
+
+    if (!bcrypt.compareSync(req.body.password, user.password)) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(req.user._id);
+
+    if (deletedUser) {
+      res.sendStatus(204);
+    } else {
+      throw new Error("User not found on deletion");
+    }
   } catch (error) {
     next(error);
   }
