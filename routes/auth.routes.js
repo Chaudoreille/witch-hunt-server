@@ -3,7 +3,11 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jsonWebToken = require("jsonwebtoken");
 const { isAuthenticated } = require("../middleware/auth.middleware");
-const { requiredFields, emailValidator } = require("../middleware/validators.middleware");
+const {
+  requiredFields,
+  emailValidator,
+} = require("../middleware/validators.middleware");
+const { fileUploader, cloudinary } = require("../config/cloudinary.config");
 
 const User = require("../models/User.model");
 
@@ -11,23 +15,44 @@ const User = require("../models/User.model");
  * Absolute path: /auth/signup
  * Create new User
  */
-router.post("/signup",
+router.post(
+  "/signup",
+  fileUploader.single("image"),
   requiredFields("username", "email", "password"),
   emailValidator,
   async (req, res, next) => {
     try {
-      const { email, password, username, image } = req.body;
+      const { email, password, username } = req.body;
 
       const existingUser = await User.findOne({ email });
 
       if (existingUser) {
-        return res.status(400).json({ message: "Email address already in use." });
+        return res
+          .status(400)
+          .json({ message: "Email address already in use." });
       }
 
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
 
-      const createdUser = await User.create({ email, password: hashedPassword, username, image });
+      let image = null;
+      if (req.file) {
+        let transformed = cloudinary.url(req.file.filename, {
+          width: 200,
+          crop: "limit",
+        });
+        if (transformed.startsWith("http:")) {
+          transformed = "https" + transformed.slice(4);
+        }
+        image = transformed;
+      }
+
+      const createdUser = await User.create({
+        email,
+        password: hashedPassword,
+        username,
+        image,
+      });
 
       if (!createdUser) {
         throw new Error("User creation failed");
@@ -36,14 +61,15 @@ router.post("/signup",
     } catch (error) {
       next(error);
     }
-  });
-
+  }
+);
 
 /**
  * Absolute path: /auth/login
  * Create and send Authentication Token
  */
-router.post("/login",
+router.post(
+  "/login",
   requiredFields("email", "password"),
   async (req, res, next) => {
     try {
@@ -71,7 +97,8 @@ router.post("/login",
     } catch (error) {
       next(error);
     }
-  });
+  }
+);
 
 /**
  * Absolute path: /auth/me
@@ -84,6 +111,5 @@ router.get("/me", isAuthenticated, (req, res, next) => {
     next(error);
   }
 });
-
 
 module.exports = router;
