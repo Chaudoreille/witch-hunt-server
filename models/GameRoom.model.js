@@ -3,6 +3,10 @@ const User = require("./User.model");
 
 const gameRoomSchema = new Schema(
   {
+    name: {
+      type: String,
+      maxLength: 20
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: User,
@@ -16,7 +20,7 @@ const gameRoomSchema = new Schema(
       type: Number
     },
     isPublished: {
-      type: boolean,
+      type: Boolean,
       default: false,
     },
     spokenLanguage: {
