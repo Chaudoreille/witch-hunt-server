@@ -22,7 +22,9 @@ const isAuthenticated = async (req, res, next) => {
         next(new AuthenticationError("User not found"));
       }
 
-      req.user = (({ _id, username, email, image }) => ({ _id, username, email, image }))(user);
+      const { _id, username, email, image } = user;
+      req.user = { _id, username, email, image };
+
       next();
     } catch {
       return res.status(401).json({ message: "Invalid authorization token" });

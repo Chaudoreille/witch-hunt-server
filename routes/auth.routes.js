@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jsonWebToken = require("jsonwebtoken");
+const { isAuthenticated } = require("../middleware/auth.middleware");
+
 
 const User = require("../models/User.model");
 
@@ -33,10 +35,11 @@ router.post("/signup", async (req, res, next) => {
 
     const createdUser = await User.create({ email, password: hashedPassword, username, image });
 
-    // remove password from newUser before we add it to the response.
-    const userData = (({ _id, username, email, image }) => ({ _id, username, email, image }))(createdUser);
-
-    res.status(201).json({ user: userData });
+    if (!createdUser) {
+      // #TODO: fix this
+      throw { name: "DB error", message: "User creation failed" };
+    }
+    res.sendStatus(201);
   } catch (error) {
     next(error);
   }
@@ -76,8 +79,17 @@ router.post("/login", async (req, res, next) => {
 
     res.status(201).json({ authToken });
   } catch (error) {
-    next(err);
+    next(error);
   }
 });
+
+/**
+ * Absolute path: /auth/me
+ * Sends user back in data.
+ */
+router.get("/me", isAuthenticated, (req, res, next) => {
+  res.status(200).send(req.user);
+});
+
 
 module.exports = router;
