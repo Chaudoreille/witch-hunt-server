@@ -17,9 +17,14 @@ router.get('/', async (req, res, next) => {
     const query = {
         game: req.query.game,
     }
+    const lastSeen = new Date(req.query.last).valueOf()
 
     try {
         const messages = await Message.find(query)
+        messages.filter(msg => {
+            const messageTime = new Date(msg.createdAt).valueOf()
+            return messageTime < lastSeen
+        })
         res.json(messages)
     } catch (error) {
         next(error)

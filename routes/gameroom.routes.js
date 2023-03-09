@@ -6,13 +6,13 @@ const GameRoom = require("../models/GameRoom.model");
 
 
 /**
- * api/message/create-room WIP
+ * api/game-room WIP
  */
 
 router.post("/", async (req, res, next) => {
     try {
         const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
-        const createdGame = await GameRoom.create({ owner: req.user._id, maxPlayers, isPublished, spokenLanguage, name });
+        const createdGame = await GameRoom.create({ owner: req.user._id, name, maxPlayers, isPublished, spokenLanguage });
 
         res.sendStatus(201)
     } catch (error) {
