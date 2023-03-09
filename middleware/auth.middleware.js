@@ -1,10 +1,7 @@
 const jsonWebToken = require("jsonwebtoken");
 const User = require("../models/User.model");
 
-function AuthenticationError(message) {
-  this.name = "AuthenticationError";
-  this.message = message;
-}
+class AuthenticationError extends Error { };
 
 const isAuthenticated = async (req, res, next) => {
   try {

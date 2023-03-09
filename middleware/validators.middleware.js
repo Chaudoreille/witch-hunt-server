@@ -3,7 +3,6 @@ const emailValidator = (req, res, next) => {
   try {
     if (req.body.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
       if (!emailRegex.test(req.body.email)) {
         return res.status(400).json({ message: "Invalid email address" });
       }

@@ -30,8 +30,7 @@ router.post("/signup",
       const createdUser = await User.create({ email, password: hashedPassword, username, image });
 
       if (!createdUser) {
-        // #TODO: fix this
-        throw { name: "DB error", message: "User creation failed" };
+        throw new Error("User creation failed");
       }
       res.sendStatus(201);
     } catch (error) {
