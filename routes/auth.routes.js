@@ -3,11 +3,9 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jsonWebToken = require("jsonwebtoken");
 const { isAuthenticated } = require("../middleware/auth.middleware");
-const {
-  requiredFields,
-  emailValidator,
-} = require("../middleware/validators.middleware");
+const { requiredFields } = require("../middleware/validators.middleware");
 const { fileUploader, cloudinary } = require("../config/cloudinary.config");
+const { isValidEmail } = require("../utils/utils");
 
 const User = require("../models/User.model");
 
@@ -19,10 +17,13 @@ router.post(
   "/signup",
   fileUploader.single("image"),
   requiredFields("username", "email", "password"),
-  emailValidator,
   async (req, res, next) => {
     try {
       const { email, password, username } = req.body;
+
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: "Invalid email address" });
+      }
 
       const existingUser = await User.findOne({ email });
 
