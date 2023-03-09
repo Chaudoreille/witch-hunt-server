@@ -88,7 +88,11 @@ router.post("/login", async (req, res, next) => {
  * Sends user back in data.
  */
 router.get("/me", isAuthenticated, (req, res, next) => {
-  res.status(200).send(req.user);
+  try {
+    res.status(200).send(req.user);
+  } catch (error) {
+    next(error);
+  }
 });
 
 
