@@ -31,7 +31,7 @@ const gameRoomSchema = new Schema(
         type: String,
         enum: { lobby: "Lobby", started: "Started", paused: "Paused" }
       },
-      users: [{
+      players: [{
         user: {
           type: Schema.Types.ObjectId,
           ref: User,
@@ -47,7 +47,7 @@ const gameRoomSchema = new Schema(
           },
           state: {
             type: String,
-            enum: { cast: "Cast", locked: "Locked" }
+            enum: { cast: "Cast", locked: "Locked", null:null }
           }
         }
       }]
