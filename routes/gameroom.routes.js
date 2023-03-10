@@ -7,25 +7,15 @@ const {isGameRoomOwner} = require('../middleware/game.middleware')
 
 const GameRoom = require("../models/GameRoom.model");
 const Pin = require('../models/Pin.model');
+const Message = require('../models/Message.model')
+
+const gameManager = new (require('../game/GameManager'));
+const GAME_DATA = gameManager.GAME_DATA;
 
 /**
  * api/game-room WIP
  */
 
-// TODO helper functions - to be extracted to utils, gameUtils, Game class or similar later on
-
-const GAME_DATA = {
-    minPlayers: 3,
-    maxPlayers: 25,
-    defaultGameName: (user) => `${user.username}'s Witchhunt`,
-    defaultIsPublished: true,
-    defaultLanguage: 'English',
-    defaultMaxPlayers: 10
-}
-
-function createPlayer(player){
-    return {user: player._id, status: 'Alive', vote: null}
-}
 
 /**
  * Creating a game room. The creator of the game room is set as it's owner and
@@ -41,7 +31,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
         if (invalidFields.length) return res.status(400).json({invalidFields, message: 'One or more specified fields had invalid values!'})
 
         const state = {};
-        state.users = [createPlayer(req.user)]
+        state.players = [gameManager.createPlayer(req.user)]
         state.status = 'Lobby';
 
         const pin = await Pin.findOne();
@@ -115,13 +105,78 @@ router.get('/:roomId', async (req, res, next)=>{
  * Modifying a game room - changing the rooms settings
  */
 router.patch('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, next)=>{
-
+    const room = req.gameRoom;
     try {
-        
+        const {isPublished, spokenLanguage, maxPlayers, name} = req.body;
+
+        const invalidFields = [];
+        if (maxPlayers > GAME_DATA.maxPlayers) invalidFields.push('maxPlayers');
+
+        if (invalidFields.length)
+            return res.status(400).json({invalidFields, message: 'One or more specified fields had invalid values!'})
+
+        if (isPublished !== undefined) room.isPublished = isPublished;
+        if (spokenLanguage) room.spokenLanguage = spokenLanguage;
+        if (maxPlayers) room.maxPlayers = maxPlayers;
+        if (name) room.name = name;
+
+        const updatedRoom = await room.save();
+
+        res.status(202).json(updatedRoom)
     } catch (error) {
         next(error);
     }
 });
 
+router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, next)=>{
+    const room = req.gameRoom;
+    try {
+        // When deleting a game room, we also need to delete all messages refering to that room
+        await Message.deleteMany({game: room});
+        await room.deleteOne()
+        return res.sendStatus(204);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// end of the base crud operations for the game room, 
+// moving on to operations to allow people to sign up/leave the room, take game actions or get current game state
+
+router.get('/:roomId/game-state', async (req, res, next)=>{
+    const roomId = req.params.roomId;
+
+    try {
+        const room = await GameRoom.findById(roomId);
+        if (!room) return res.status(404).json({message: 'No room with the specified id found!'})
+
+        return res.json(room.state);
+
+    } catch (error) {
+        next(error);
+    }
+    
+});
+
+router.patch('/:roomId/game-state', async (req, res, next)=>{
+    const roomId = req.params.roomId;
+    const {action, parameters} = req.body;
+
+    try {
+        const room = await GameRoom.findById(roomId);
+        if (!room) return res.status(404).json({message: 'No room with the specified id found!'})
+
+        const result = gameManager.takeAction(req.user, action, room, parameters);
+
+        if (result.error) return res.status(400).json(result)
+        
+        room.state = result;
+        await room.save();
+        
+        res.json(room);
+    } catch (error) {
+        next(error);
+    } 
+});
 
 module.exports = router;
