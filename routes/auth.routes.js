@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jsonWebToken = require("jsonwebtoken");
 const { isAuthenticated } = require("../middleware/auth.middleware");
 const { requiredFields } = require("../middleware/validators.middleware");
-const { fileUploader, cloudinary } = require("../config/cloudinary.config");
+const imageHandler = require("../middleware/image.middleware");
 const { isValidEmail } = require("../utils/utils");
 
 const User = require("../models/User.model");
@@ -15,11 +15,11 @@ const User = require("../models/User.model");
  */
 router.post(
   "/signup",
-  fileUploader.single("image"),
+  imageHandler,
   requiredFields("username", "email", "password"),
   async (req, res, next) => {
     try {
-      const { email, password, username } = req.body;
+      const { email, password, username, image } = req.body;
 
       if (!isValidEmail(email)) {
         return res.status(400).json({ message: "Invalid email address" });
@@ -35,18 +35,6 @@ router.post(
 
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
-
-      let image = null;
-      if (req.file) {
-        let transformed = cloudinary.url(req.file.filename, {
-          width: 200,
-          crop: "limit",
-        });
-        if (transformed.startsWith("http:")) {
-          transformed = "https" + transformed.slice(4);
-        }
-        image = transformed;
-      }
 
       const createdUser = await User.create({
         email,
