@@ -70,7 +70,7 @@ router.get('/', async (req, res, next)=>{
             if (room) return res.json(room)
 
             return res.status(404).json({message: 'Room not found'});
-        } 
+        }
 
         query['state.status'] = 'Lobby';
         query.isPublished = true;
@@ -168,7 +168,7 @@ router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
 
         const result = gameManager.takeAction(req.user, action, room, parameters);
 
-        if (result.error) return res.status(400).json(result)
+        if (result.error) return res.status(400).json({message: result.error})
         
         room.state = result;
         await room.save();
