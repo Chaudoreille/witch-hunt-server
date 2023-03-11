@@ -173,7 +173,7 @@ router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
         room.state = result;
         await room.save();
         
-        res.json(room);
+        res.json(result);
     } catch (error) {
         next(error);
     } 
