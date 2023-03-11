@@ -10,53 +10,53 @@ const gameManager = new GameManager();
 const GAMES_AMOUNT = 7;
 
 const users = [{
-        username: 'rhaegar',
+        username: 'Rhaegar',
         email: 'rhaegar@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'eddard',
+        username: 'Eddard',
         email: 'eddard@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
 
     },{
-        username: 'jaime',
+        username: 'Jaime',
         email: 'jamie@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'cersei',
+        username: 'Cersei',
         email: 'cersei@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'tyrion',
+        username: 'Tyrion',
         email: 'tyrion@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'arya',
+        username: 'Sarya',
         email: 'arya@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'sansa',
+        username: 'Sansa',
         email: 'sansa@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'cat',
+        username: 'Cat',
         email: 'cat@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'jonsnow',
+        username: 'Jon_Snow',
         email: 'jonsnow@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'brienne',
+        username: 'Brienne',
         email: 'brienne@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
