@@ -22,6 +22,7 @@ const GAME_DATA = gameManager.GAME_DATA;
  * also automatically added to the player list of the game state
  */
 router.post("/", isAuthenticated, async (req, res, next) => {
+    console.log(req.body)
     try {
         const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
 
@@ -41,7 +42,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
             owner: req.user,
             name: name || GAME_DATA.defaultGameName(req.user), 
             maxPlayers: maxPlayers || GAME_DATA.defaultMaxPlayers, 
-            isPublished: isPublished || GAME_DATA.defaultIsPublished, 
+            isPublished: isPublished !== undefined ? isPublished : GAME_DATA.defaultIsPublished,
             spokenLanguage: spokenLanguage || GAME_DATA.defaultLanguage, 
             pin: pin.pin,
             state });
@@ -70,7 +71,7 @@ router.get('/', async (req, res, next)=>{
             if (room) return res.json(room)
 
             return res.status(404).json({message: 'Room not found'});
-        } 
+        }
 
         query['state.status'] = 'Lobby';
         query.isPublished = true;
@@ -88,12 +89,12 @@ router.get('/', async (req, res, next)=>{
 /**
  * Get the information for one specific game room
  */
-router.get('/:roomId', async (req, res, next)=>{
+router.get('/:roomId', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
     if (!isValidObjectId(roomId)) return res.status(400).json({message: 'Invalid Room Id'});
 
     try {
-        const room = await GameRoom.findById(roomId);
+        const room = await GameRoom.findById(roomId).populate('state.players.user', {username: 1, image: 1});
         if (room) return res.json(room);
         return res.status(404).json({message: 'No room found under that id!'})
     } catch (error) {
@@ -143,7 +144,7 @@ router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, nex
 // end of the base crud operations for the game room, 
 // moving on to operations to allow people to sign up/leave the room, take game actions or get current game state
 
-router.get('/:roomId/game-state', async (req, res, next)=>{
+router.get('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
 
     try {
@@ -158,7 +159,7 @@ router.get('/:roomId/game-state', async (req, res, next)=>{
     
 });
 
-router.patch('/:roomId/game-state', async (req, res, next)=>{
+router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
     const {action, parameters} = req.body;
 
@@ -168,12 +169,12 @@ router.patch('/:roomId/game-state', async (req, res, next)=>{
 
         const result = gameManager.takeAction(req.user, action, room, parameters);
 
-        if (result.error) return res.status(400).json(result)
+        if (result.error) return res.status(400).json({message: result.error})
         
         room.state = result;
         await room.save();
         
-        res.json(room);
+        res.json(result);
     } catch (error) {
         next(error);
     } 
