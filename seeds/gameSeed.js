@@ -116,6 +116,11 @@ const users = [{
 ]
 
 async function seed() {
+    console.log('deleting any existing Users and GameRooms')
+
+    await User.deleteMany();
+    await GameRoom.deleteMany();
+
     console.log('creating users')
 
     const dbUsers = [];
