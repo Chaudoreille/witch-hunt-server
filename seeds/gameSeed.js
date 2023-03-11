@@ -68,6 +68,7 @@ async function seed() {
     const dbUsers = await User.create(users);
 
     console.log('creating games')
+    const rooms = []
     for (let i = 0; i < GAMES_AMOUNT; i++) {
         const pin = await Pin.findOne();
         await Pin.deleteOne(pin);
@@ -84,8 +85,26 @@ async function seed() {
             isPublished: true, 
             spokenLanguage: ['English', 'French', 'English', 'German', 'English', 'Italian', 'English', 'Spanish'][Math.floor(Math.random() * 8)], 
             pin: pin.pin,
-            state });
+            state
+        });
+        rooms.push(createdGame)
     }
+    
+    console.log('signing people up for games')
+    for (let i = 0; i < rooms.length; i++) {
+        room = rooms[i];
+        for (let j = 0; j < dbUsers.length; j++) {
+            user = dbUsers[j];
+            if (Math.random() < .7) {
+                const result = gameManager.takeAction(user, 'join', room);
+                if (!result.error) {
+                    room.state = result;
+                    await room.save()
+                }
+            }
+        }
+    }
+
     console.log('done seeding')
     db.connection.close();
 }
