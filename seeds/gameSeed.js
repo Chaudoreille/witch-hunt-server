@@ -8,57 +8,108 @@ const gameManager = new GameManager();
 
 
 // amount of games to be seeded
-const GAMES_AMOUNT = 7;
+const GAMES_AMOUNT = 12;
 
 const users = [{
-        username: 'Rhaegar',
-        email: 'rhaegar@fake.mail',
+        username: 'Alexandre',
+        email: 'alex@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'Eddard',
-        email: 'eddard@fake.mail',
+        username: 'Bertie',
+        email: 'bert@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
 
     },{
-        username: 'Jaime',
-        email: 'jamie@fake.mail',
+        username: 'Charles',
+        email: 'chuck@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'Cersei',
-        email: 'cersei@fake.mail',
+        username: 'Denis',
+        email: 'denis@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'Tyrion',
-        email: 'tyrion@fake.mail',
+        username: 'Emilia',
+        email: 'emilia@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'Sarya',
-        email: 'arya@fake.mail',
+        username: 'Francoise',
+        email: 'franzi@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'Sansa',
-        email: 'sansa@fake.mail',
+        username: 'Gustave',
+        email: 'gustave@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'Cat',
-        email: 'cat@fake.mail',
+        username: 'Helene',
+        email: 'helene@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },{
-        username: 'Jon_Snow',
-        email: 'jonsnow@fake.mail',
+        username: 'Irma',
+        email: 'irma@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     }, {
-        username: 'Brienne',
-        email: 'brienne@fake.mail',
+        username: 'Juliette',
+        email: 'jules@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    },{
+        username: 'Karla',
+        email: 'karla@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    }, {
+        username: 'Lucienne',
+        email: 'luzifer@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+
+    },{
+        username: 'Matthieu',
+        email: 'matt@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    }, {
+        username: 'Nicolas',
+        email: 'nic@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    },{
+        username: 'Olivier',
+        email: 'oli@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    }, {
+        username: 'Pauline',
+        email: 'pauline@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    },{
+        username: 'Quentin',
+        email: 'quentin@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    }, {
+        username: 'Ricardo',
+        email: 'ric@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    },{
+        username: 'Stephane',
+        email: 'steve@fake.mail',
+        password: '123',
+        image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
+    }, {
+        username: 'Thomas',
+        email: 'tom@fake.mail',
         password: '123',
         image: 'http://res.cloudinary.com/dmbdo5peg/image/upload/c_limit,w_200/v1/iron-social/whsajsw8wo2mgy2ricor',
     },
@@ -107,7 +158,7 @@ async function seed() {
         room = rooms[i];
         for (let j = 0; j < dbUsers.length; j++) {
             user = dbUsers[j];
-            if (Math.random() < .7) {
+            if (Math.random() < .3) {
                 const result = gameManager.takeAction(user, 'join', room);
                 if (!result.error) {
                     room.state = result;
