@@ -88,7 +88,7 @@ router.get('/', async (req, res, next)=>{
 /**
  * Get the information for one specific game room
  */
-router.get('/:roomId', async (req, res, next)=>{
+router.get('/:roomId', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
     if (!isValidObjectId(roomId)) return res.status(400).json({message: 'Invalid Room Id'});
 
@@ -143,7 +143,7 @@ router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, nex
 // end of the base crud operations for the game room, 
 // moving on to operations to allow people to sign up/leave the room, take game actions or get current game state
 
-router.get('/:roomId/game-state', async (req, res, next)=>{
+router.get('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
 
     try {
@@ -158,7 +158,7 @@ router.get('/:roomId/game-state', async (req, res, next)=>{
     
 });
 
-router.patch('/:roomId/game-state', async (req, res, next)=>{
+router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next)=>{
     const roomId = req.params.roomId;
     const {action, parameters} = req.body;
 
