@@ -22,6 +22,7 @@ const GAME_DATA = gameManager.GAME_DATA;
  * also automatically added to the player list of the game state
  */
 router.post("/", isAuthenticated, async (req, res, next) => {
+    console.log(req.body)
     try {
         const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
 
@@ -41,7 +42,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
             owner: req.user,
             name: name || GAME_DATA.defaultGameName(req.user), 
             maxPlayers: maxPlayers || GAME_DATA.defaultMaxPlayers, 
-            isPublished: isPublished || GAME_DATA.defaultIsPublished, 
+            isPublished: isPublished !== undefined ? isPublished : GAME_DATA.defaultIsPublished,
             spokenLanguage: spokenLanguage || GAME_DATA.defaultLanguage, 
             pin: pin.pin,
             state });
@@ -93,7 +94,7 @@ router.get('/:roomId', isAuthenticated, async (req, res, next)=>{
     if (!isValidObjectId(roomId)) return res.status(400).json({message: 'Invalid Room Id'});
 
     try {
-        const room = await GameRoom.findById(roomId);
+        const room = await GameRoom.findById(roomId).populate('state.players.user', {username: 1, image: 1});
         if (room) return res.json(room);
         return res.status(404).json({message: 'No room found under that id!'})
     } catch (error) {
