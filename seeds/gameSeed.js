@@ -1,5 +1,6 @@
 const GameRoom = require('../models/GameRoom.model');
 const User = require('../models/User.model');
+const bcrypt = require("bcrypt");
 const Pin = require('../models/Pin.model');
 const db = require("../db");
 const GameManager = require('../game/GameManager');
@@ -65,14 +66,25 @@ const users = [{
 
 async function seed() {
     console.log('creating users')
-    const dbUsers = await User.create(users);
+
+    const dbUsers = [];
+    for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync(user.password, salt);
+        user.password = hashedPassword;
+        
+        const newUser = await User.create(user);
+        dbUsers.push(newUser);
+    }
 
     console.log('creating games')
     const rooms = []
     for (let i = 0; i < GAMES_AMOUNT; i++) {
         const pin = await Pin.findOne();
         await Pin.deleteOne(pin);
-        const user = dbUsers[i % dbUsers.length];
+        let user = dbUsers[i % dbUsers.length];
 
         const state = {};
         state.players = [gameManager.createPlayer(user)]
