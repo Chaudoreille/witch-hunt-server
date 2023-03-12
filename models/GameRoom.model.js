@@ -27,9 +27,14 @@ const gameRoomSchema = new Schema(
       type: String
     },
     state: {
+      round: {
+        type: Number,
+        minValue: 0,
+        default: 0,
+      },
       status: {
         type: String,
-        enum: { lobby: "Lobby", started: "Started", paused: "Paused" }
+        enum: { lobby: "Lobby", started: "Started", paused: "Paused", completed: "Completed" }
       },
       players: [{
         user: {
