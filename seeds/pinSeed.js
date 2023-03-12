@@ -1,3 +1,4 @@
+require("dotenv").config();
 const GameRoom = require('../models/GameRoom.model');
 const Pin = require('../models/Pin.model')
 const db = require("../db");

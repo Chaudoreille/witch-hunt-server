@@ -17,15 +17,22 @@ router.get('/', async (req, res, next) => {
         const query = {
             game: req.query.game,
         }
-        const isValidStamp = new Date(req.query.last).getTime() > 0
 
-        if (!isValidStamp) {
-            res.status(400).send({ message: "Invalid timestamp" })
+        console.log('req.query', req.query)
+        console.log('query', query)
+
+        if(req.query.last) {
+            const isValidStamp = new Date(req.query.last).getTime() > 0
+
+            if (!isValidStamp) {
+                return res.status(400).send({ message: "Invalid timestamp" })
+            }
+            if (req.query.last && isValidStamp) {
+                query.updatedAt = { $gt: req.query.last };
+            }
         }
-        if (req.query.last && isValidStamp) {
-            query.updatedAt = { $gt: req.query.last };
-        }
-        const messages = await Message.find(query)
+        
+        const messages = await Message.find(query).populate('author', {username: 1, image: 1})
 
         res.json(messages)
     } catch (error) {

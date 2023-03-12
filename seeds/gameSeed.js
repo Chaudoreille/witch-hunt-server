@@ -1,3 +1,4 @@
+require("dotenv").config();
 const GameRoom = require('../models/GameRoom.model');
 const User = require('../models/User.model');
 const bcrypt = require("bcrypt");
