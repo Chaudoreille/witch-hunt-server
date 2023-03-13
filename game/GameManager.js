@@ -8,7 +8,7 @@
 // static methods/properties
 class GameManager {
     GAME_DATA = {
-        minPlayers: 1,
+        minPlayers: 3,
         maxPlayers: 25,
         defaultGameName: (user) => `${user.username}'s Witchhunt`,
         defaultIsPublished: true,
