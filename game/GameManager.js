@@ -54,7 +54,8 @@ class GameManager {
                 break;
             case 'start':
                 result = this.actionStartGame(user, gameRoom);
-                return this.startRound(result)
+                if (!result.error) return this.startRound(result)
+                break;
             default:
                 return {
                     error: 'Action does not exist. Please check documentation for the available actions'
@@ -192,9 +193,11 @@ class GameManager {
      * @param {GameRoom} gameRoom 
      */
     actionStartGame(user, gameRoom) {
-        if (!user._id.equals(gameRoom.owner._id)) return {error: 'User is not the owner of this game room!'};
+        if (!user._id.equals(gameRoom.owner._id)) return {error: 'Only the owner can start the game!'};
         if (gameRoom.state.status !== 'Lobby') return {error: 'Game was already started!'};
-        if (gameRoom.state.players.length < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} to start the game!`}
+        if (gameRoom.state.players.length < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!`}
+        if (gameRoom.state.players.length > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either add space to the game room or have someone leave!`}
+
 
         const newGameState = {...gameRoom.state, status: 'Started'}
         return newGameState;
