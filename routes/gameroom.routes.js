@@ -26,10 +26,8 @@ router.post("/", isAuthenticated, async (req, res, next) => {
     try {
         const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
 
-        const invalidFields = [];
-        if (maxPlayers > GAME_DATA.maxPlayers) invalidFields.push('maxPlayers');
-
-        if (invalidFields.length) return res.status(400).json({invalidFields, message: 'One or more specified fields had invalid values!'})
+        if (maxPlayers > GAME_DATA.maxPlayers) return res.status(400).json({fields:'', message: `The maximum amount of players in one match is ${GAME_DATA.maxPlayers}`})
+        if (maxPlayers < GAME_DATA.minPlayers) return res.status(400).json({fields:'', message: `The minimum amount of players in one match is ${GAME_DATA.minPlayers}`})
 
         const state = {};
         state.players = [gameManager.createPlayer(req.user)]
