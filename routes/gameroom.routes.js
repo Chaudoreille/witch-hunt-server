@@ -77,10 +77,21 @@ router.get('/', async (req, res, next) => {
         $options: 'i'
       };
     }
+    if (req.query.name) {
+      query.name = {
+        $regex: `.*${req.query.name}.*`,
+        $options: 'i'
+      };
+    }
 
-    query['state.status'] = 'Lobby';
-    query.isPublished = true;
+    if (!req.query.owner) {
+      query.isPublished = true;
+    } else {
+      query.owner = req.query.owner;
+      query['state.status'] = 'Lobby';
+    }
 
+    // TODO: sort by descending date
     const rooms = await GameRoom.find(query);
 
     // No error checking needed for whether any rooms exist at all or result is empty
