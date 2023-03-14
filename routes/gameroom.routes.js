@@ -25,8 +25,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
   try {
     const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
 
-    if (maxPlayers > GAME_DATA.maxPlayers) return res.status(400).json({ fields: '', message: `The maximum amount of players in one match is ${GAME_DATA.maxPlayers}` });
-    if (maxPlayers < GAME_DATA.minPlayers) return res.status(400).json({ fields: '', message: `The minimum amount of players in one match is ${GAME_DATA.minPlayers}` });
+    if (maxPlayers > GAME_DATA.maxPlayers || maxPlayers < GAME_DATA.minPlayers) return res.status(400).json({ fields: '', message: `You need between ${GAME_DATA.minPlayers} and ${GAME_DATA.maxPlayers} players!` });
 
     const state = {};
     state.players = [gameManager.createPlayer(req.user)];
