@@ -18,9 +18,6 @@ router.get('/', async (req, res, next) => {
             game: req.query.game,
         }
 
-        console.log('req.query', req.query)
-        console.log('query', query)
-
         if(req.query.last) {
             const isValidStamp = new Date(req.query.last).getTime() > 0
 

@@ -8,7 +8,7 @@
 // static methods/properties
 class GameManager {
     GAME_DATA = {
-        minPlayers: 1,
+        minPlayers: 3,
         maxPlayers: 25,
         defaultGameName: (user) => `${user.username}'s Witchhunt`,
         defaultIsPublished: true,
@@ -54,7 +54,8 @@ class GameManager {
                 break;
             case 'start':
                 result = this.actionStartGame(user, gameRoom);
-                return this.startRound(result)
+                if (!result.error) return this.startRound(result)
+                break;
             default:
                 return {
                     error: 'Action does not exist. Please check documentation for the available actions'
@@ -192,9 +193,11 @@ class GameManager {
      * @param {GameRoom} gameRoom 
      */
     actionStartGame(user, gameRoom) {
-        if (!user._id.equals(gameRoom.owner._id)) return {error: 'User is not the owner of this game room!'};
+        if (!user._id.equals(gameRoom.owner._id)) return {error: 'Only the owner can start the game!'};
         if (gameRoom.state.status !== 'Lobby') return {error: 'Game was already started!'};
-        if (gameRoom.state.players.length < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} to start the game!`}
+        if (gameRoom.state.players.length < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!`}
+        if (gameRoom.state.players.length > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either add space to the game room or have someone leave!`}
+
 
         const newGameState = {...gameRoom.state, status: 'Started'}
         return newGameState;
@@ -207,7 +210,6 @@ class GameManager {
      */
     checkForEndOfRound(gameState) {
         // the round ends when all living players have locked in their votes
-        console.log(gameState)
         return !(gameState.players.some(player => ((player.status === 'Alive') && (player.vote.state !== 'Locked'))));
     }
 
@@ -239,7 +241,6 @@ class GameManager {
      * @param {GameState} gameState 
      */
     handleEndOfRound(gameState) {
-        console.log(gameState)
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{

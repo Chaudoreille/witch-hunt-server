@@ -22,7 +22,7 @@ router.post(
       const { email, password, username, image } = req.body;
 
       if (!isValidEmail(email)) {
-        return res.status(400).json({ message: "Invalid email address" });
+        return res.status(400).json({ email: { message: "Invalid email address" } });
       }
 
       const existingUser = await User.findOne({ email });
@@ -30,7 +30,7 @@ router.post(
       if (existingUser) {
         return res
           .status(400)
-          .json({ message: "Email address already in use." });
+          .json({ email: { message: "Email address already in use." } });
       }
 
       const salt = bcrypt.genSaltSync(10);

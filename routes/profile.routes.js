@@ -17,7 +17,7 @@ router.patch("/",
     try {
       const { username, email, image, password, newPassword } = req.body;
       const update = { username, email, image };
-      console.log("updating some shite", update);
+
       const user = await User.findById(req.user._id);
 
       if (newPassword || email) {
