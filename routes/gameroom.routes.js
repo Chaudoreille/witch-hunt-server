@@ -92,7 +92,7 @@ router.get('/', async (req, res, next) => {
     }
 
     // TODO: sort by descending date
-    const rooms = await GameRoom.find(query);
+    const rooms = await GameRoom.find(query).sort({ updatedAt: -1 });
 
     // No error checking needed for whether any rooms exist at all or result is empty
     // if the array is empty, front end simply displays no rooms when looping over array
