@@ -31,4 +31,19 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
-module.exports = { isAuthenticated };
+const socketIsAuthenticated = async (socket, next) => {
+  try {
+    const { auth, query } = socket.handshake;
+    const payload = jsonWebToken.verify(auth.token, process.env.TOKEN_SECRET);
+    const user = await User.findById(payload._id);
+
+    socket.user = user;
+    socket.game = query.game;
+
+  } catch (error) {
+    next(error);
+  }
+  next();
+};
+
+module.exports = { isAuthenticated, socketIsAuthenticated };
