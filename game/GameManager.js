@@ -210,7 +210,6 @@ class GameManager {
      */
     checkForEndOfRound(gameState) {
         // the round ends when all living players have locked in their votes
-        console.log(gameState)
         return !(gameState.players.some(player => ((player.status === 'Alive') && (player.vote.state !== 'Locked'))));
     }
 
@@ -242,7 +241,6 @@ class GameManager {
      * @param {GameState} gameState 
      */
     handleEndOfRound(gameState) {
-        console.log(gameState)
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{
