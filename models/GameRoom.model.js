@@ -89,6 +89,13 @@ const gameRoomSchema = new Schema(
   }
 );
 
+/**
+ * GameRoom Model.
+ * This model holds all the information for the game room, both information regarding the room
+ * itself (how many players are allowed, what language should be spoken, who the owner is),
+ * as well as the information about the game state (is the game still in the lobby, has it been started
+ * or even completed), as well as players that are participating in this match
+ */
 const GameRoom = model("GameRoom", gameRoomSchema);
 
 module.exports = GameRoom;

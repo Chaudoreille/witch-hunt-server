@@ -55,6 +55,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
 
 /**
  * Get a list of all public game rooms that are currently in the Lobby state
+ * Result can be adjusted by including a query
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -158,7 +159,7 @@ router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, nex
 
 // end of the base crud operations for the game room, 
 // moving on to operations to allow people to sign up/leave the room, take game actions or get current game state
-
+// NOTE: This route is no longer actively being used due to the move to socket.io
 router.get('/:roomId/game-state', isAuthenticated, async (req, res, next) => {
   const roomId = req.params.roomId;
 
@@ -174,6 +175,7 @@ router.get('/:roomId/game-state', isAuthenticated, async (req, res, next) => {
 
 });
 
+// NOTE: This route is no longer actively being used due to the move to socket.io
 router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next) => {
   const roomId = req.params.roomId;
   const { action, parameters } = req.body;
