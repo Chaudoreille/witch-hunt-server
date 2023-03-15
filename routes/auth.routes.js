@@ -9,6 +9,21 @@ const { isValidEmail } = require("../utils/utils");
 
 const User = require("../models/User.model");
 
+function errorMessage(errorType) {
+  const key = errorType.toLowerCase();
+  errors = {
+    "invalid email": "Email address is invalid.",
+    "invalid password": "Password is invalid.",
+    "existing email": "Email address already in use.",
+    "inexisting user": "User not found.",
+    "create user": "User creation failed.",
+  };
+  if (Object.keys(errors).includes(key)) {
+    return errors[key];
+  }
+  return "Unknown error";
+}
+
 /**
  * Absolute path: /auth/signup
  * Create new User
@@ -22,7 +37,7 @@ router.post(
       const { email, password, username, image } = req.body;
 
       if (!isValidEmail(email)) {
-        return res.status(400).json({ email: { message: "Invalid email address" } });
+        return res.status(400).json({ email: { message: errorMessage("invalid email") } });
       }
 
       const existingUser = await User.findOne({ email });
@@ -30,7 +45,7 @@ router.post(
       if (existingUser) {
         return res
           .status(400)
-          .json({ email: { message: "Email address already in use." } });
+          .json({ email: { message: errorMessage("existing email") } });
       }
 
       const salt = bcrypt.genSaltSync(10);
@@ -44,7 +59,7 @@ router.post(
       });
 
       if (!createdUser) {
-        throw new Error("User creation failed");
+        throw new Error(errorMessage("create user"));
       }
       res.sendStatus(201);
     } catch (error) {
@@ -67,11 +82,11 @@ router.post(
       const user = await User.findOne({ email });
 
       if (!user) {
-        return res.status(401).json({ message: "User not found." });
+        return res.status(401).json({ message: errorMessage("inexisting user") });
       }
 
       if (!bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ message: "Invalid password" });
+        return res.status(401).json({ message: errorMessage("invalid password") });
       }
 
       // extract id for payload
@@ -88,6 +103,28 @@ router.post(
     }
   }
 );
+
+/**
+ * Absolute path: /auth/valid-email/:email
+ * checks if email is free to use
+ */
+router.get("/valid-email/:email", async (req, res, next) => {
+  try {
+    if (!isValidEmail(req.params.email)) {
+      return res.status(400).json({ email: { message: errorMessage("invalid email") } });
+    }
+
+    const userFound = await User.findOne({ email: req.params.email }).exec();
+    if (!userFound) {
+      res.sendStatus(204);
+    } else {
+      console.log(userFound);
+      res.status(400).json({ message: errorMessage("existing email") });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * Absolute path: /auth/me
