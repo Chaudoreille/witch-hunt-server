@@ -60,6 +60,7 @@ function createIO(server) {
 
         callback(null);
       } catch (error) {
+        console.log(error)
         callback(error.message);
       }
     });

@@ -1,8 +1,6 @@
 /**
  * GameManager
  * This class will be responsible for the actual game logic
- * As we do not keep track of the games state in memory, just the db
- * the GameManager will only have static values/methods
  */
 
 // static methods/properties
@@ -73,13 +71,13 @@ class GameManager {
         if (actionCanEndMode) {
             let endOfModeCheck, handleEndOfMode, startNextMode;
             if (isDaytime){
-                endOfModeCheck = this.checkForEndOfDay;
-                handleEndOfMode = this.handleEndOfDay;
-                startNextMode = this.handleStartNight;
+                endOfModeCheck = this.checkForEndOfDay.bind(this);
+                handleEndOfMode = this.handleEndOfDay.bind(this);
+                startNextMode = this.handleStartNight.bind(this);
             } else {
-                endOfModeCheck = this.checkForEndOfNight;
-                handleEndOfMode = this.handleEndOfNight;
-                startNextMode = this.handleStartDay;
+                endOfModeCheck = this.checkForEndOfNight.bind(this);
+                handleEndOfMode = this.handleEndOfNight.bind(this);
+                startNextMode = this.handleStartDay.bind(this);
             }
     
             if (endOfModeCheck(result)) {
@@ -169,6 +167,9 @@ class GameManager {
         const currentPlayer = gameState.players.filter(player => {
             return player.user.equals(user._id)})[0];
         if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
+
+        // v2.5 at night only witches can vote
+        if (gameState.mode === 'Nighttime' && currentPlayer.role !== 'Witch') return {error: 'User is not eligible to vote'}
 
         // v3 verify user has not yet locked his vote
         if (currentPlayer.vote.state === 'Locked') return {error: 'User has already locked their vote for this round!'}
@@ -261,6 +262,7 @@ class GameManager {
      * @returns GameState (also mutates gameState in place)
      */
     resetAllVotes(gameState) {
+        console.log('HANDLE RESET VOTES', gameState)
         gameState.players.forEach(player => player.vote = {target: null, state: null})
         return gameState;
     }
@@ -271,6 +273,8 @@ class GameManager {
      * @param {GameState} gameState 
      */
     handleEndOfDay(gameState) {
+        console.log('HANDLE END OF DAY', gameState)
+
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{
@@ -299,13 +303,20 @@ class GameManager {
      * @returns GameState
      */
     handleStartDay(gameState) {
+        console.log('HANDLE START OF DAY')
+
         this.resetAllVotes(gameState);
         gameState.round++;
+        gameState.mode = 'Daytime'
         return gameState;
     }
 
     handleEndOfGame(gameState) {
         gameState.status = 'Completed';
+
+        // TODO Check which team won
+        // let winner...
+        // gameState.winners = winner;
         return gameState;
     }
 
@@ -317,7 +328,12 @@ class GameManager {
      * @returns GameState
      */
     handleStartNight(gameState) {
+        console.log('HANDLE START OF NIGHT')
+
+        console.log('THIS:', this)
         this.resetAllVotes(gameState);
+        gameState.mode = 'Nighttime'
+
         return gameState;
     }
 
@@ -328,18 +344,21 @@ class GameManager {
      * @returns boolean
      */
     checkForEndOfNight(gameState) {
+        console.log('HANDLE CHECK FOR END OF NIGHT', gamestate)
+
         // the night continues as long as some Witches that are still alive have not locked their vote
         return !(gameState.players.some(player => (((player.status === 'Alive') && (player.role === 'Witch') && (player.vote.state !== 'Locked')))));
     }
 
     /**
      * Called at the end of day. Checks for the player with the most votes and sets his status to Dead
-     * In case of a tie, a random Villager from among those votes for dies and the night round begins 
-     * with the same group of players as the day
+     * In case of a tie, they kill no one
+     * (Currently, this is identical to the end of day, but may differ with the addition of further roles)
      * @param {GameState} gameState 
      * @returns GameState (also mutates gameState in place!)
      */
     handleEndOfNight(gameState) {
+        console.log('HANDLE END OF NIGHT')
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{

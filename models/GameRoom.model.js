@@ -71,6 +71,11 @@ const gameRoomSchema = new Schema(
         type: String,
         enum: {day: 'Daytime', night: 'Nighttime'},
         default: 'Daytime',
+      },
+      winners: {
+        type: String,
+        enum: {villager: 'Villagers', witch: 'Witches', null: null},
+        default: null,
       }
     },
   },
