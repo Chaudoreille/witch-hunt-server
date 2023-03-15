@@ -166,13 +166,13 @@ class GameManager {
             return player.user._id.equals(user._id)})[0];
         if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
 
-        // v2.5 at night only witches can vote
+        // v3 at night only witches can vote
         if (gameState.mode === 'Nighttime' && currentPlayer.role !== 'Witch') return {error: 'User is not eligible to vote'}
 
-        // v3 verify user has not yet locked his vote
+        // v4 verify user has not yet locked his vote
         if (currentPlayer.vote.state === 'Locked') return {error: 'User has already locked their vote for this round!'}
 
-        // v4 verify users target is a valid choice (must be part of the game, not the user himself, and alive)
+        // v5 verify users target is a valid choice (must be part of the game, not the user himself, and alive)
         const target = gameState.players.filter(player=>player.user._id.equals(targetId))[0];
         
         if (!target || target.status !== 'Alive' || user._id.equals(targetId)) return {error: 'Invalid target!'}
@@ -323,10 +323,7 @@ class GameManager {
 
     handleEndOfGame(gameState) {
         gameState.status = 'Completed';
-
-        // TODO Check which team won
-        // let winner...
-        // gameState.winners = winner;
+        
         return gameState;
     }
 
