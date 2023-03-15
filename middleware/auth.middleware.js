@@ -1,4 +1,5 @@
 const jsonWebToken = require("jsonwebtoken");
+const GameRoom = require("../models/GameRoom.model");
 const User = require("../models/User.model");
 
 class AuthenticationError extends Error { };
@@ -40,8 +41,12 @@ const socketIsAuthenticated = async (socket, next) => {
     const user = await User.findById(payload._id);
 
     socket.user = user;
-    socket.game = query.game;
 
+    const room = await GameRoom.findById(query.game);
+    if (!room) {
+      next("Invalid Room");
+    }
+    socket.game = query.game;
   } catch (error) {
     next(error);
   }
