@@ -111,7 +111,7 @@ router.post(
 router.get("/valid-email/:email", async (req, res, next) => {
   try {
     if (!isValidEmail(req.params.email)) {
-      return res.status(400).json({ email: { message: errorMessage("invalid email") } });
+      return res.status(400).json({ message: errorMessage("invalid email") });
     }
 
     const userFound = await User.findOne({ email: req.params.email }).exec();
