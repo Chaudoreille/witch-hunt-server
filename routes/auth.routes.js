@@ -118,7 +118,6 @@ router.get("/valid-email/:email", async (req, res, next) => {
     if (!userFound) {
       res.sendStatus(204);
     } else {
-      console.log(userFound);
       res.status(400).json({ message: errorMessage("existing email") });
     }
   } catch (error) {
