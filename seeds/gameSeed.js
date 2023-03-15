@@ -184,6 +184,7 @@ async function seed() {
                     room.state = result;
                     await room.save()
                 }
+                
             }
         }
     }

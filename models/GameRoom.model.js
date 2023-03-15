@@ -54,9 +54,25 @@ const gameRoomSchema = new Schema(
             type: String,
             enum: { cast: "Cast", locked: "Locked", null:null }
           }
-        }
-      }]
-    }
+        },
+        role: {
+          type: String,
+          enum: {villager: 'Villager', witch: 'Witch'},
+          default: 'Villager',
+        },
+        team: {
+          type: String,
+          enum: {villager: 'Villagers', witch: 'Witches'},
+          default: 'Villagers',
+        },
+
+      }],
+      mode: {
+        type: String,
+        enum: {day: 'Daytime', night: 'Nighttime'},
+        default: 'Daytime',
+      }
+    },
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`
