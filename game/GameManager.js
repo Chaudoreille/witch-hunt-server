@@ -38,7 +38,10 @@ class GameManager {
      */
     takeAction(user, action, gameRoom, parameters) {
         const gameState = gameRoom.state;
+        const isDaytime = gameRoom.state.mode === 'Daytime';
+
         let result;
+        let actionCanEndMode = false;
         switch (action) {
             case 'join':
                 return this.actionJoinGame(user, gameRoom);
@@ -51,10 +54,11 @@ class GameManager {
                 break;
             case 'lockVote':
                 result = this.actionLockVote(user, gameState, parameters);
+                actionCanEndMode = true;
                 break;
             case 'start':
                 result = this.actionStartGame(user, gameRoom);
-                if (!result.error) return this.startRound(result)
+                if (!result.error) return this.resetAllVotes(result)
                 break;
             default:
                 return {
@@ -63,17 +67,33 @@ class GameManager {
         }
 
         if (result.error) return result;
-        
-        if (this.checkForEndOfRound(result)) {
-            this.handleEndOfRound(result);
 
-            // As we just finished a round, we also need to check for end of game
-            if (this.checkForEndOfGame(result)) {
-                this.handleEndOfGame(result);
+        // As only some actions have the potential to trigger the end of the current day/night
+        // we only check for that when one of those actions was performed
+        if (actionCanEndMode) {
+            let endOfModeCheck, handleEndOfMode, startNextMode;
+            if (isDaytime){
+                endOfModeCheck = this.checkForEndOfDay;
+                handleEndOfMode = this.handleEndOfDay;
+                startNextMode = this.handleStartNight;
             } else {
-                this.startRound(result);
+                endOfModeCheck = this.checkForEndOfNight;
+                handleEndOfMode = this.handleEndOfNight;
+                startNextMode = this.handleStartDay;
+            }
+    
+            if (endOfModeCheck(result)) {
+                handleEndOfMode(result);
+    
+                // As we just finished a round, we also need to check for end of game
+                if (this.checkForEndOfGame(result)) {
+                    this.handleEndOfGame(result);
+                } else {
+                    startNextMode(result);
+                }
             }
         }
+        
         
 
         return result;
@@ -193,23 +213,34 @@ class GameManager {
      * @param {GameRoom} gameRoom 
      */
     actionStartGame(user, gameRoom) {
+        const players = gameRoom.state.players;
+        const playerCount = players.length;
         if (!user._id.equals(gameRoom.owner._id)) return {error: 'Only the owner can start the game!'};
         if (gameRoom.state.status !== 'Lobby') return {error: 'Game was already started!'};
-        if (gameRoom.state.players.length < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!`}
-        if (gameRoom.state.players.length > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either add space to the game room or have someone leave!`}
+        if (playerCount < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!`}
+        if (playerCount > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either add space to the game room or have someone leave!`}
 
+        // Pick witches, amount depends on the player count - 3-6 players, 1 witch, 7-10: 2 witches, 11-14: 3 witches and so on
+        const witchCount = Math.floor((playerCount - 3) / 4 + 1);
+        for (let i = 0; i < witchCount; i++) {
+            const options = players.filter(player => player.role === 'Villager')
+            const newWitch = options[Math.floor(Math.random() * options.length)]
+            newWitch.role = 'Witch';
+            newWitch.team = 'Witches';
+        }
 
         const newGameState = {...gameRoom.state, status: 'Started'}
         return newGameState;
     }
 
     /**
-     * Called after every successful action. Checks whether the current gameState is the end of the current round.
+     * Called after every successful day-action with the potential to end the day. 
+     * Checks whether the current gameState causes the day to end.
      * @param {GameState} gameState 
      * @returns boolean
      */
-    checkForEndOfRound(gameState) {
-        // the round ends when all living players have locked in their votes
+    checkForEndOfDay(gameState) {
+        // the day ends when all living players have locked in their votes
         return !(gameState.players.some(player => ((player.status === 'Alive') && (player.vote.state !== 'Locked'))));
     }
 
@@ -227,20 +258,19 @@ class GameManager {
     /**
      * Called in the beginning of each round. Resets all votes to null and increments round counter
      * @param {GameState} gamestate 
-     * @returns GameState
+     * @returns GameState (also mutates gameState in place)
      */
-    startRound(gameState) {
+    resetAllVotes(gameState) {
         gameState.players.forEach(player => player.vote = {target: null, state: null})
-        gameState.round++;
         return gameState;
     }
 
     /**
-     * Called at the end of a round. Checks for the player with the most votes and sets his status to Dead
-     * In case of a tie, no player dies and the next round begins with the same amount of players as the last
+     * Called at the end of day. Checks for the player with the most votes and sets his status to Dead
+     * In case of a tie, no player dies and the night round begins with the same group of players as the day
      * @param {GameState} gameState 
      */
-    handleEndOfRound(gameState) {
+    handleEndOfDay(gameState) {
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{
@@ -260,8 +290,72 @@ class GameManager {
         return gameState;
     }
 
+    /**
+     * Handles all actions necessary at the beginning of the day.
+     * Currently only resets all votes and increments round counter,
+     * but may do more with addition
+     * of further roles
+     * @param {GameState} gameState 
+     * @returns GameState
+     */
+    handleStartDay(gameState) {
+        this.resetAllVotes(gameState);
+        gameState.round++;
+        return gameState;
+    }
+
     handleEndOfGame(gameState) {
         gameState.status = 'Completed';
+        return gameState;
+    }
+
+    /**
+     * Handles all actions necessary at the beginning of the night.
+     * Currently only resets all votes, but may do more with addition
+     * of further roles
+     * @param {GameState} gameState 
+     * @returns GameState
+     */
+    handleStartNight(gameState) {
+        this.resetAllVotes(gameState);
+        return gameState;
+    }
+
+     /**
+     * Called after every successful night-action with the potential to end the day. 
+     * Checks whether the current gameState causes the night to end.
+     * @param {GameState} gameState 
+     * @returns boolean
+     */
+    checkForEndOfNight(gameState) {
+        // the night continues as long as some Witches that are still alive have not locked their vote
+        return !(gameState.players.some(player => (((player.status === 'Alive') && (player.role === 'Witch') && (player.vote.state !== 'Locked')))));
+    }
+
+    /**
+     * Called at the end of day. Checks for the player with the most votes and sets his status to Dead
+     * In case of a tie, a random Villager from among those votes for dies and the night round begins 
+     * with the same group of players as the day
+     * @param {GameState} gameState 
+     * @returns GameState (also mutates gameState in place!)
+     */
+    handleEndOfNight(gameState) {
+        const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
+        votes.sort();
+        const voteCount = votes.reduce((previous, target)=>{
+            previous[target] ??= 0;
+            previous[target] += 1;
+            return previous
+        }, {})
+        
+        const maxVotes = Math.max(...Object.values(voteCount));
+        const maxVoted = gameState.players.filter(player => voteCount[player.user._id] === maxVotes);
+        
+        // If it's a tie, gameState stays the same
+        if (maxVoted.length > 1) return gameState;
+
+        const victim = maxVoted[0];
+        victim.status = 'Dead';
         return gameState;
     }
 }
