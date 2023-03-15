@@ -85,9 +85,9 @@ router.get('/', async (req, res, next) => {
 
     if (!req.query.owner) {
       query.isPublished = true;
-    } else {
-      query.owner = req.query.owner;
       query['state.status'] = 'Lobby';
+    } else {
+      query["state.players.user"] = req.query.owner;
     }
 
     // TODO: sort by descending date
