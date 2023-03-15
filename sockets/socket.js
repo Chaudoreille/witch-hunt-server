@@ -75,12 +75,17 @@ function createIO(server) {
       }
     });
 
+    socket.on('delete-room', function (callback) {
+      io.to(socket.game).emit("deleted-room", "The game owner has deleted this room.");
+      callback();
+    });
+
     GameRoom.findById(socket.game).populate('state.players.user', { username: 1, image: 1 })
       .then((room) => socket.emit('update-room', room))
       .catch(error => socket.emit('error', error.message));
 
-    Message.find({game:socket.game}).populate('author', {username: 1, image: 1})
-      .then(messages=>{console.log('sending messages'), socket.emit('initialize-messages', messages)})
+    Message.find({ game: socket.game }).populate('author', { username: 1, image: 1 })
+      .then(messages => { console.log('sending messages'), socket.emit('initialize-messages', messages); })
       .catch(error => socket.emit('error', error.message));
   });
 
