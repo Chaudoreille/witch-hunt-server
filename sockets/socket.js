@@ -60,10 +60,10 @@ function createIO(server){
             }
         })
 
-        socket.on('update', async function () {
+        socket.on('force-update', async function () {
             try {
                 const room = await GameRoom.findById(socket.game).populate('state.players.user', { username: 1, image: 1 });
-                socket.to(socket.game).emit('update-room', room)
+                io.to(socket.game).emit('update-room', room)
             } catch (error) {
                 socket.emit('error', error.message);
             }
@@ -83,7 +83,7 @@ module.exports = createIO;
 
 /**
  * BACKEND
- * update -> update game room
+ * force-update -> update game room
  * game-action -> update game room
  * 
  * FRONTEND
