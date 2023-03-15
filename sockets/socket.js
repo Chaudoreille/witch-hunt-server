@@ -7,6 +7,7 @@ const gameManager = new (require('../game/GameManager'));
 
 const { socketIsAuthenticated } = require('../middleware/auth.middleware');
 const GameRoom = require("../models/GameRoom.model");
+const User = require("../models/User.model");
 
 function createIO(server) {
   const io = new Server(server, {
@@ -28,7 +29,6 @@ function createIO(server) {
       try {
         const createdMessage = await Message.create({ content, game: game, author: user.id });
         await createdMessage.populate("author", { username: 1, image: 1 });
-        console.log(createdMessage);
 
         io.to(game).emit("message", createdMessage);
       } catch (error) {
@@ -43,8 +43,8 @@ function createIO(server) {
 
     socket.on('game-action', async (action, parameters, callback) => {
       try {
-        const room = await GameRoom.findById(socket.game);
-
+        const room = await GameRoom.findById(socket.game).populate('state.players.user', { username: 1, image: 1 });;
+        console.log('USER', socket.user)
         if (!room) throw Error('Room not found!');
 
         const result = gameManager.takeAction(socket.user, action, room, parameters);
@@ -53,9 +53,9 @@ function createIO(server) {
 
         room.state = result;
 
-        await room.populate('state.players.user', { username: 1, image: 1 });
+        // moved populate
+        // await room.populate('state.players.user', { username: 1, image: 1 });
         await room.save();
-
         io.to(socket.game).emit('update-room', room);
 
         callback(null);
@@ -86,7 +86,7 @@ function createIO(server) {
       .catch(error => socket.emit('error', error.message));
 
     Message.find({ game: socket.game }).populate('author', { username: 1, image: 1 })
-      .then(messages => { console.log('sending messages'), socket.emit('initialize-messages', messages); })
+      .then(messages => { socket.emit('initialize-messages', messages); })
       .catch(error => socket.emit('error', error.message));
   });
 

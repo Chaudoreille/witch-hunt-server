@@ -76,6 +76,10 @@ const gameRoomSchema = new Schema(
         type: String,
         enum: {villager: 'Villagers', witch: 'Witches', null: null},
         default: null,
+      },
+      storytime: {
+        type: String,
+        default: '',
       }
     },
   },

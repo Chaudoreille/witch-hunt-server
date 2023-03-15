@@ -2,8 +2,6 @@
  * GameManager
  * This class will be responsible for the actual game logic
  */
-
-// static methods/properties
 class GameManager {
     GAME_DATA = {
         minPlayers: 3,
@@ -20,7 +18,7 @@ class GameManager {
      * @returns 
      */
     createPlayer(player){
-        return {user: player._id, status: 'Alive', vote: {target: null, state: null}}
+        return {user: player, status: 'Alive', vote: {target: null, state: null}}
     }
 
     /**
@@ -42,10 +40,12 @@ class GameManager {
         let actionCanEndMode = false;
         switch (action) {
             case 'join':
-                return this.actionJoinGame(user, gameRoom);
+                result = this.actionJoinGame(user, gameRoom);
+                return result;
 
             case 'leave':
-                return this.actionLeaveGame(user, gameRoom);
+                result= this.actionLeaveGame(user, gameRoom);
+                return result
 
             case 'castVote':
                 result = this.actionCastVote(user, gameState, parameters);
@@ -56,8 +56,7 @@ class GameManager {
                 break;
             case 'start':
                 result = this.actionStartGame(user, gameRoom);
-                if (!result.error) return this.resetAllVotes(result)
-                break;
+                return result;
             default:
                 return {
                     error: 'Action does not exist. Please check documentation for the available actions'
@@ -91,8 +90,6 @@ class GameManager {
                 }
             }
         }
-        
-        
 
         return result;
     }
@@ -107,7 +104,7 @@ class GameManager {
         const gameState = gameRoom.state;
         if (gameState.players.length >= gameRoom.maxPlayers) return {error: 'This room is already full!'};
         
-        const alreadySignedUp = gameState.players.some(player => player.user.equals(user._id));
+        const alreadySignedUp = gameState.players.some(player => player.user._id.equals(user._id));
         if (alreadySignedUp) return {error: 'This user is already signed up for this game room!'}
 
         const newPlayer = this.createPlayer(user);
@@ -116,6 +113,7 @@ class GameManager {
         players.push(newPlayer);
 
         const newGameState = {...gameState, players};
+        newGameState.storytime = `${user.username} has joined the game`
         return newGameState
     }
 
@@ -139,14 +137,14 @@ class GameManager {
 
         // If a player leaves during the game, mark him as dead, but don't remove him from the game
         if (gameState.status !== 'Lobby') {
-            const player = gameState.players.filter(player => player.user.equals(user._id))[0];
+            const player = gameState.players.filter(player => player.user._id.equals(user._id))[0];
             player.status = 'Dead';
             return gameState;
         }
 
-        const players = gameState.players.filter(player => !player.user.equals(user._id));
+        const players = gameState.players.filter(player => !player.user._id.equals(user._id));
         const newGameState = {...gameState, players};
-
+        newGameState.storytime = `${user.username} has left the game`
         return newGameState;
     }
 
@@ -165,7 +163,7 @@ class GameManager {
 
         // v2 verify user is an eligible voter (must be part of the game and alive)
         const currentPlayer = gameState.players.filter(player => {
-            return player.user.equals(user._id)})[0];
+            return player.user._id.equals(user._id)})[0];
         if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
 
         // v2.5 at night only witches can vote
@@ -175,14 +173,13 @@ class GameManager {
         if (currentPlayer.vote.state === 'Locked') return {error: 'User has already locked their vote for this round!'}
 
         // v4 verify users target is a valid choice (must be part of the game, not the user himself, and alive)
-        const target = gameState.players.filter(player=>player.user.equals(targetId))[0];
+        const target = gameState.players.filter(player=>player.user._id.equals(targetId))[0];
         
         if (!target || target.status !== 'Alive' || user._id.equals(targetId)) return {error: 'Invalid target!'}
 
         // apply vote to gamestate
         currentPlayer.vote.target = target.user;
         currentPlayer.vote.state = 'Cast';
-
 
         return gameState
     }
@@ -195,7 +192,7 @@ class GameManager {
 
         // v2 verify user is an eligible voter (must be part of the game and alive)
         const currentPlayer = gameState.players.filter(player => {
-            return player.user.equals(user._id)})[0];
+            return player.user._id.equals(user._id)})[0];
         if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
 
         // v3 verify user has not yet locked his vote
@@ -231,7 +228,9 @@ class GameManager {
         }
 
         const newGameState = {...gameRoom.state, status: 'Started'}
-        return newGameState;
+        newGameState.storytime = `Good morning villagers. Welcome to a new match of Witch-Hunt!`
+
+        return this.resetAllVotes(newGameState);
     }
 
     /**
@@ -253,7 +252,18 @@ class GameManager {
     checkForEndOfGame(gameState) {
         // in the current iteration of the game, the game ends when there is only two player left alive 
         // (as they would just have to keep voting for each other and so the game could never end)
-        return gameState.players.filter(player => player.status === 'Alive').length <= 2;
+        const livingPlayers =  gameState.players.filter(player => player.status === 'Alive')
+        if (livingPlayers.every(player => player.team === 'Witches')) {
+            gameState.winners = 'Witches'
+            return true;
+        }
+
+        if (livingPlayers.every(player => player.team === 'Villagers')) {
+            gameState.winners = 'Villagers'
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -262,7 +272,6 @@ class GameManager {
      * @returns GameState (also mutates gameState in place)
      */
     resetAllVotes(gameState) {
-        console.log('HANDLE RESET VOTES', gameState)
         gameState.players.forEach(player => player.vote = {target: null, state: null})
         return gameState;
     }
@@ -273,8 +282,6 @@ class GameManager {
      * @param {GameState} gameState 
      */
     handleEndOfDay(gameState) {
-        console.log('HANDLE END OF DAY', gameState)
-
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{
@@ -287,10 +294,15 @@ class GameManager {
         const maxVoted = gameState.players.filter(player => voteCount[player.user._id] === maxVotes);
         
         // If it's a tie, gameState stays the same
-        if (maxVoted.length > 1) return gameState;
+        if (maxVoted.length > 1) {
+            gameState.storytime = 'By the time the sun sets, the villagers could not agree on a decision, and so no lynching took place today!'
+            return gameState;
+        }
 
         const victim = maxVoted[0];
         victim.status = 'Dead';
+        gameState.storytime = `The villagers have decided to lynch ${victim.user.username}! `
+        victim.role === 'Witch' ? 'Congratulations villagers, there is one less witch among you!' : `Unfortunately, ${victim.user.username} was innocent. As you stare at his remains, you can feel the witches among you grow in power.`
         return gameState;
     }
 
@@ -303,8 +315,6 @@ class GameManager {
      * @returns GameState
      */
     handleStartDay(gameState) {
-        console.log('HANDLE START OF DAY')
-
         this.resetAllVotes(gameState);
         gameState.round++;
         gameState.mode = 'Daytime'
@@ -328,9 +338,6 @@ class GameManager {
      * @returns GameState
      */
     handleStartNight(gameState) {
-        console.log('HANDLE START OF NIGHT')
-
-        console.log('THIS:', this)
         this.resetAllVotes(gameState);
         gameState.mode = 'Nighttime'
 
@@ -344,8 +351,6 @@ class GameManager {
      * @returns boolean
      */
     checkForEndOfNight(gameState) {
-        console.log('HANDLE CHECK FOR END OF NIGHT', gamestate)
-
         // the night continues as long as some Witches that are still alive have not locked their vote
         return !(gameState.players.some(player => (((player.status === 'Alive') && (player.role === 'Witch') && (player.vote.state !== 'Locked')))));
     }
@@ -358,7 +363,6 @@ class GameManager {
      * @returns GameState (also mutates gameState in place!)
      */
     handleEndOfNight(gameState) {
-        console.log('HANDLE END OF NIGHT')
         const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
         votes.sort();
         const voteCount = votes.reduce((previous, target)=>{
@@ -371,10 +375,14 @@ class GameManager {
         const maxVoted = gameState.players.filter(player => voteCount[player.user._id] === maxVotes);
         
         // If it's a tie, gameState stays the same
-        if (maxVoted.length > 1) return gameState;
+        if (maxVoted.length > 1) {
+            gameState.storytime = 'As the morning dawns, you feel a sense of relieve. All villagers are accounted for!'
+            return gameState;
+        }
 
         const victim = maxVoted[0];
         victim.status = 'Dead';
+        gameState.storytime = `As the morning dawns and the villagers leave their huts, one door remains closed. ${victim.user.username} was murdered in the night!`
         return gameState;
     }
 }
