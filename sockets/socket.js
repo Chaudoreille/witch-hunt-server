@@ -27,6 +27,17 @@ function createIO(server) {
       const { content } = message;
       const { user, game } = socket;
       try {
+        // Messages cannot be sent:
+        // - during night time
+        // - by players that are not participating in the match
+        // - by players that have been killed
+        const room = await GameRoom.findById(game);
+        if (room.state.mode === 'Nighttime') return socket.emit('error', 'You cannot send messages during the night. Go to sleep!');
+
+        const currentPlayer = room.state.players.filter(player => player.user.equals(socket.user._id))[0];
+        if (!currentPlayer) return socket.emit('error', 'Only participating players can talk in the chat!');
+        if (currentPlayer.status !== 'Alive') return socket.emit('error', 'The dead remain silent!');
+
         const createdMessage = await Message.create({ content, game: game, author: user.id });
         await createdMessage.populate("author", { username: 1, image: 1 });
 

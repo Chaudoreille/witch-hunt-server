@@ -3,11 +3,6 @@ const router = express.Router();
 
 const Message = require("../models/Message.model");
 
-
-
-
-
-
 /**
 api/messages?game=gameRoomId&last=timestamp	GET	display list of messages for room	
  */
