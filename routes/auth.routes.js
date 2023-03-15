@@ -79,7 +79,7 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email }, {password: 1});
 
       if (!user) {
         return res.status(401).json({ message: errorMessage("inexisting user") });
