@@ -59,7 +59,7 @@ class GameManager {
                 return result;
             default:
                 return {
-                    error: 'Action does not exist. Please check documentation for the available actions'
+                    error: 'This is not a valid action.'
                 };
         }
 
@@ -105,7 +105,7 @@ class GameManager {
         if (gameState.players.length >= gameRoom.maxPlayers) return {error: 'This room is already full!'};
         
         const alreadySignedUp = gameState.players.some(player => player.user._id.equals(user._id));
-        if (alreadySignedUp) return {error: 'This user is already signed up for this game room!'}
+        if (alreadySignedUp) return {error: 'You are already signed up for this game!'}
 
         const newPlayer = this.createPlayer(user);
         const players = [...gameState.players]
@@ -113,7 +113,7 @@ class GameManager {
         players.push(newPlayer);
 
         const newGameState = {...gameState, players};
-        newGameState.storytime = `${user.username} has joined the game`
+        newGameState.storytime = `${user.username} has joined the game.`
         return newGameState
     }
 
@@ -144,7 +144,7 @@ class GameManager {
 
         const players = gameState.players.filter(player => !player.user._id.equals(user._id));
         const newGameState = {...gameState, players};
-        newGameState.storytime = `${user.username} has left the game`
+        newGameState.storytime = `${user.username} has left the game.`
         return newGameState;
     }
 
@@ -159,18 +159,18 @@ class GameManager {
 
         // validation steps: 
         // v1 verify the game is active
-        if (gameState.status !== 'Started') return {error: 'Game is not currently active, cannot cast votes!'}
+        if (gameState.status !== 'Started') return {error: 'Game is not currently active, you cannot cast your vote at this time!'}
 
         // v2 verify user is an eligible voter (must be part of the game and alive)
         const currentPlayer = gameState.players.filter(player => {
             return player.user._id.equals(user._id)})[0];
-        if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
+        if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'Only living players may participate in the vote!'}
 
         // v3 at night only witches can vote
-        if (gameState.mode === 'Nighttime' && currentPlayer.role !== 'Witch') return {error: 'User is not eligible to vote'}
+        if (gameState.mode === 'Nighttime' && currentPlayer.role !== 'Witch') return {error: 'You are not eligible to vote during the night!'}
 
         // v4 verify user has not yet locked his vote
-        if (currentPlayer.vote.state === 'Locked') return {error: 'User has already locked their vote for this round!'}
+        if (currentPlayer.vote.state === 'Locked') return {error: 'You already locked your vote for this round!'}
 
         // v5 verify users target is a valid choice (must be part of the game, not the user himself, and alive)
         const target = gameState.players.filter(player=>player.user._id.equals(targetId))[0];
@@ -188,15 +188,15 @@ class GameManager {
 
         // validation steps: 
         // v1 verify the game is active
-        if (gameState.status !== 'Started') return {error: 'Game is not currently active, cannot cast votes!'}
+        if (gameState.status !== 'Started') return {error: 'Game is not currently active, cannot lock your vote at this time!'}
 
         // v2 verify user is an eligible voter (must be part of the game and alive)
         const currentPlayer = gameState.players.filter(player => {
             return player.user._id.equals(user._id)})[0];
-        if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'User is not eligible to vote'}
+        if (!currentPlayer || currentPlayer.status!=='Alive') return {error: 'Only living players may participate in the vote!'}
 
         // v3 verify user has not yet locked his vote
-        if (currentPlayer.vote.state !== 'Cast') return {error: 'User needs to cast a vote before the vote can be locked!'}
+        if (currentPlayer.vote.state !== 'Cast') return {error: 'You need to cast a vote for someone before locking your vote!'}
 
         currentPlayer.vote.state = 'Locked'
 
@@ -216,7 +216,7 @@ class GameManager {
         if (!user._id.equals(gameRoom.owner._id)) return {error: 'Only the owner can start the game!'};
         if (gameRoom.state.status !== 'Lobby') return {error: 'Game was already started!'};
         if (playerCount < this.GAME_DATA.minPlayers) return {error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!`}
-        if (playerCount > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either add space to the game room or have someone leave!`}
+        if (playerCount > gameRoom.maxPlayers) return {error: `Too many players signed up for this game. Either increase the maximum amount of players or have someone leave!`}
 
         // Pick witches, amount depends on the player count - 3-6 players, 1 witch, 7-10: 2 witches, 11-14: 3 witches and so on
         const witchCount = Math.floor((playerCount - 3) / 4 + 1);
@@ -302,7 +302,7 @@ class GameManager {
         const victim = maxVoted[0];
         victim.status = 'Dead';
         gameState.storytime = `The villagers have decided to lynch ${victim.user.username}! `
-        victim.role === 'Witch' ? 'Congratulations villagers, there is one less witch among you!' : `Unfortunately, ${victim.user.username} was innocent. As you stare at his remains, you can feel the witches among you grow in power.`
+        victim.role === 'Witch' ? 'Congratulations villagers, there is one less witch among you!' : `Unfortunately, ${victim.user.username} was innocent. As you stare at their remains, you can feel the witches among you grow in power.`
         return gameState;
     }
 

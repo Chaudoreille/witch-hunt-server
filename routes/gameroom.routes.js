@@ -13,7 +13,7 @@ const gameManager = new (require('../game/GameManager'));
 const GAME_DATA = gameManager.GAME_DATA;
 
 /**
- * api/game-room WIP
+ * All routes in this file are prefixed by /api/game-room
  */
 
 
@@ -91,7 +91,6 @@ router.get('/', async (req, res, next) => {
       query["state.players.user"] = req.query.owner;
     }
 
-    // TODO: sort by descending date
     const rooms = await GameRoom.find(query).sort({ updatedAt: -1 });
 
     // No error checking needed for whether any rooms exist at all or result is empty
@@ -105,6 +104,7 @@ router.get('/', async (req, res, next) => {
 /**
  * Get the information for one specific game room
  */
+// NOTE This route is no longer used, as the functionality as used by our frontend has been moved to the sockets
 router.get('/:roomId', isAuthenticated, async (req, res, next) => {
   const roomId = req.params.roomId;
   if (!isValidObjectId(roomId)) return res.status(400).json({ message: 'Invalid Room Id' });
@@ -152,46 +152,6 @@ router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, nex
     await Message.deleteMany({ game: room });
     await room.deleteOne();
     return res.sendStatus(204);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// end of the base crud operations for the game room, 
-// moving on to operations to allow people to sign up/leave the room, take game actions or get current game state
-// NOTE: This route is no longer actively being used due to the move to socket.io
-router.get('/:roomId/game-state', isAuthenticated, async (req, res, next) => {
-  const roomId = req.params.roomId;
-
-  try {
-    const room = await GameRoom.findById(roomId);
-    if (!room) return res.status(404).json({ message: 'No room with the specified id found!' });
-
-    return res.json(room.state);
-
-  } catch (error) {
-    next(error);
-  }
-
-});
-
-// NOTE: This route is no longer actively being used due to the move to socket.io
-router.patch('/:roomId/game-state', isAuthenticated, async (req, res, next) => {
-  const roomId = req.params.roomId;
-  const { action, parameters } = req.body;
-
-  try {
-    const room = await GameRoom.findById(roomId);
-    if (!room) return res.status(404).json({ message: 'No room with the specified id found!' });
-
-    const result = gameManager.takeAction(req.user, action, room, parameters);
-
-    if (result.error) return res.status(400).json({ message: result.error });
-
-    room.state = result;
-    await room.save();
-
-    res.json(result);
   } catch (error) {
     next(error);
   }

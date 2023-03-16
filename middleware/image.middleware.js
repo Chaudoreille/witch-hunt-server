@@ -4,6 +4,10 @@ const { fileUploader, cloudinary } = require("../config/cloudinary.config");
 
 router.use(fileUploader.single("image"));
 
+/**
+ * Middleware used for routes where user can upload a picture.
+ * Will upload the picture automatically to cloudinary platform.
+ */
 router.use((req, res, next) => {
   try {
     if (req.file) {

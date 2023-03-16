@@ -5,7 +5,7 @@ const db = require("../db");
 
 CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 PINSIZE = 6;
-AMOUNT = 10000;
+AMOUNT = 100000;
 
 // NOTE: For a live game, the seeding should be adjusted so it is possible to run periodically
 // As right now, it does not take into account the already existing pins in existing
@@ -25,12 +25,9 @@ async function generatePins() {
         tries++;
     }
 
-    const pinArray =  Array.from(pinSet);
+    const pinArray =  Array.from(pinSet).map(pin=>{return {pin:pin}})
 
-    for (i = 0; i < pinArray.length; i++) {
-        const pin = pinArray[i];
-        await Pin.create({pin})
-    }
+    await Pin.insertMany(pinArray);
 
     console.log(`pin generation done, needed ${tries} tries to generate ${AMOUNT} unique pins`)
     db.connection.close();

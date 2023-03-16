@@ -1,4 +1,8 @@
-
+/**
+ * Email validation helper
+ * @param {String} email 
+ * @returns 
+ */
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
