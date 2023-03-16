@@ -18,7 +18,7 @@ router.patch("/",
       const { username, email, image, password, newPassword } = req.body;
       const update = { username, email, image };
 
-      const user = await User.findById(req.user._id);
+      const user = await User.findById(req.user._id, {password: 1});
 
       if (newPassword || email) {
         if (!password || !bcrypt.compareSync(password, user.password)) {
