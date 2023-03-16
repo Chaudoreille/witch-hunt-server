@@ -302,7 +302,7 @@ class GameManager {
         const victim = maxVoted[0];
         victim.status = 'Dead';
         gameState.storytime = `The villagers have decided to lynch ${victim.user.username}! `
-        victim.role === 'Witch' ? 'Congratulations villagers, there is one less witch among you!' : `Unfortunately, ${victim.user.username} was innocent. As you stare at their remains, you can feel the witches among you grow in power.`
+        gameState.storytime += (victim.role === 'Witch') ? 'Congratulations villagers, there is one less witch among you!' : `Unfortunately, ${victim.user.username} was innocent. As you stare at their remains, you can feel the witches among you grow in power.`
         return gameState;
     }
 
