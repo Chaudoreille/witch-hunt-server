@@ -159,7 +159,6 @@ async function seed() {
 
         const state = {};
         state.players = [gameManager.createPlayer(user)]
-        state.status = 'Lobby';
 
         const createdGame =  await GameRoom.create({
             owner: user,

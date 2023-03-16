@@ -25,12 +25,16 @@ router.post("/", isAuthenticated, async (req, res, next) => {
   try {
     const { name, maxPlayers, isPublished, spokenLanguage } = req.body;
 
+    // the provided maxPlayers value should already be guarded by protection on the frontend,
+    // but we still need to validate that the value matches restrictions provided by the game data
     if (maxPlayers > GAME_DATA.maxPlayers || maxPlayers < GAME_DATA.minPlayers) return res.status(400).json({ fields: '', message: `You need between ${GAME_DATA.minPlayers} and ${GAME_DATA.maxPlayers} players!` });
 
+    // set up the initial game state - most parts are handled by default values,
+    // but we need to make sure to sign up the owner to the game
     const state = {};
     state.players = [gameManager.createPlayer(req.user)];
-    state.status = 'Lobby';
 
+    // fetch a fresh pin from our database (which is pre-seeded with a high number of unique pins)
     const pin = await Pin.findOne();
     await Pin.deleteOne(pin);
 
@@ -46,6 +50,7 @@ router.post("/", isAuthenticated, async (req, res, next) => {
 
     if (createdGame) return res.status(201).json(createdGame);
 
+    // we there was no createdGame, something went wrong and we throw an error, informing ErrorHandling mechanism
     throw new Error('Gameroom creation failed');
 
   } catch (error) {
@@ -61,8 +66,7 @@ router.get('/', async (req, res, next) => {
   try {
     const query = {};
 
-    // If a pin was provided, we look just for that one specific room,
-    // ignoring isPublished/state
+    // If a pin was provided, we look just for that one specific room and return it
     if (req.query.pin) {
       query.pin = req.query.pin;
       const room = await GameRoom.findOne(query);
@@ -71,6 +75,7 @@ router.get('/', async (req, res, next) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
+    // if a language and/or name was provided as part of the query, set up filters
     if (req.query.spokenLanguage) {
       query.spokenLanguage = {
         $regex: `.*${req.query.spokenLanguage}.*`,
@@ -84,6 +89,7 @@ router.get('/', async (req, res, next) => {
       };
     }
 
+    // If we are not looking for games by a specific person, only return public games
     if (!req.query.owner) {
       query.isPublished = true;
       query['state.status'] = 'Lobby';
@@ -102,30 +108,18 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
- * Get the information for one specific game room
- */
-// NOTE This route is no longer used, as the functionality as used by our frontend has been moved to the sockets
-router.get('/:roomId', isAuthenticated, async (req, res, next) => {
-  const roomId = req.params.roomId;
-  if (!isValidObjectId(roomId)) return res.status(400).json({ message: 'Invalid Room Id' });
-
-  try {
-    const room = await GameRoom.findById(roomId).populate('state.players.user', { username: 1, image: 1 });
-    if (room) return res.json(room);
-    return res.status(404).json({ message: 'No room found under that id!' });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
  * Modifying a game room - changing the rooms settings
+ * Access to this route requires not just authentication
+ * but also authorization - only the owner of the room can
+ * edit it
  */
 router.patch('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, next) => {
   const room = req.gameRoom;
   try {
     const { isPublished, spokenLanguage, maxPlayers, name } = req.body;
 
+    // Checking for invalid input values. At the current time, the only field that can
+    // actually have an invalid value is the maxPlayers one
     const invalidFields = [];
     if (maxPlayers > GAME_DATA.maxPlayers) invalidFields.push('maxPlayers');
 
@@ -145,12 +139,19 @@ router.patch('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, next
   }
 });
 
+/**
+ * Deleting a room
+ * Access to this route requires not just authentication
+ * but also authorization - only the owner of the room can
+ * delete it
+ */
 router.delete('/:roomId', isAuthenticated, isGameRoomOwner, async (req, res, next) => {
   const room = req.gameRoom;
   try {
     // When deleting a game room, we also need to delete all messages refering to that room
     await Message.deleteMany({ game: room });
     await room.deleteOne();
+
     return res.sendStatus(204);
   } catch (error) {
     next(error);

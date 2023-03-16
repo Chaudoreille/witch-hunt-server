@@ -16,12 +16,14 @@ class AuthenticationError extends Error { };
  */
 const isAuthenticated = async (req, res, next) => {
   try {
+    // Check for existance of Bearer auth token in the headers
     const { authorization } = req.headers;
-
     if (!authorization || authorization.split(" ")[0] !== "Bearer") {
       return res.status(401).json({ message: "Authentication token required" });
     }
 
+    // If a token was found, verify that it can be decrypted to a valid user ID, using our
+    // secret key
     try {
       const payload = jsonWebToken.verify(authorization.split(" ")[1], process.env.TOKEN_SECRET);
       const user = await User.findById(payload._id);

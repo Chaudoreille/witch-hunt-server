@@ -34,7 +34,8 @@ const gameRoomSchema = new Schema(
       },
       status: {
         type: String,
-        enum: { lobby: "Lobby", started: "Started", paused: "Paused", completed: "Completed" }
+        enum: { lobby: "Lobby", started: "Started", completed: "Completed" },
+        default: 'Lobby',
       },
       players: [{
         user: {
