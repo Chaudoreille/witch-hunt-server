@@ -2,6 +2,13 @@ const User = require("../models/User.model");
 const GameRoom = require('../models/GameRoom.model');
 const { isValidObjectId } = require("mongoose");
 
+/**
+ * Authorization Middleware. 
+ * Allows access to the protected route only for the owner of the specified game room.
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {NextFunction} next 
+ */
 async function isGameRoomOwner (req, res, next) {
     const roomId = req.params.roomId;
     if (!isValidObjectId(roomId)) return res.status(400).json({message: 'Invalid Room Id'});

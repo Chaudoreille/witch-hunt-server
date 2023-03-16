@@ -70,7 +70,6 @@ function createIO(server) {
     socket.on('game-action', async (action, parameters, callback) => {
       try {
         const room = await GameRoom.findById(socket.game).populate('state.players.user', { username: 1, image: 1 });;
-        console.log('USER', socket.user)
         if (!room) throw Error('Room not found!');
 
         const result = gameManager.takeAction(socket.user, action, room, parameters);
