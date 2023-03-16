@@ -13,7 +13,8 @@ router.use((req, res, next) => {
     if (req.file) {
       let transformed = cloudinary.url(req.file.filename, {
         width: 200,
-        crop: "limit",
+        height: 200,
+        crop: "fill",
       });
       if (transformed.startsWith("http:")) {
         transformed = "https" + transformed.slice(4);
