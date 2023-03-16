@@ -3,15 +3,10 @@ const router = express.Router();
 
 const Message = require("../models/Message.model");
 
-
-
-
-
-
 /**
 api/messages?game=gameRoomId&last=timestamp	GET	display list of messages for room	
  */
-
+// NOTE: This route is no longer actively being used due to the move to socket.io
 router.get('/', async (req, res, next) => {
     try {
         const query = {
@@ -38,7 +33,7 @@ router.get('/', async (req, res, next) => {
 })
 
 /** api/messages	POST		send a message */
-
+// NOTE: This route is no longer actively being used due to the move to socket.io
 router.post('/', async (req, res, next) => {
     try {
         const { content, gameId } = req.body

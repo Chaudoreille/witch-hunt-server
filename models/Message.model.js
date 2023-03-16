@@ -25,6 +25,10 @@ const messageSchema = new Schema(
   }
 );
 
+/**
+ * Message Model.
+ * This model will be used for the chat messages sent within game rooms.
+ */
 const Message = model("Message", messageSchema);
 
 module.exports = Message;

@@ -33,12 +33,10 @@ const isAuthenticated = async (req, res, next) => {
 };
 
 const socketIsAuthenticated = async (socket, next) => {
-  console.log('socket middle ware')
-
   try {
     const { auth, query } = socket.handshake;
     const payload = jsonWebToken.verify(auth.token, process.env.TOKEN_SECRET);
-    const user = await User.findById(payload._id);
+    const user = await User.findById(payload._id, {username: 1, image: 1});
 
     socket.user = user;
 

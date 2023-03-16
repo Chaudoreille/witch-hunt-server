@@ -79,7 +79,7 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email }, {password: 1});
 
       if (!user) {
         return res.status(401).json({ message: errorMessage("inexisting user") });
@@ -118,7 +118,6 @@ router.get("/valid-email/:email", async (req, res, next) => {
     if (!userFound) {
       res.sendStatus(204);
     } else {
-      console.log(userFound);
       res.status(400).json({ message: errorMessage("existing email") });
     }
   } catch (error) {
