@@ -230,7 +230,7 @@ class GameManager {
         }
 
         // Pick little girl, one per game, amongst villagers
-        const options = players.find(player => player.role === 'Villager');
+        const options = players.filter(player => player.role === 'Villager');
         const littleGirl = options[Math.floor(Math.random() * options.length)];
         littleGirl.role = 'Girl';
 
