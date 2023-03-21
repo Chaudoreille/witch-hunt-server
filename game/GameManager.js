@@ -229,6 +229,11 @@ class GameManager {
             newWitch.team = 'Witches';
         }
 
+        // Pick little girl, one per game, amongst villagers
+        const options = players.find(player => player.role === 'Villager');
+        const littleGirl = options[Math.floor(Math.random() * options.length)];
+        littleGirl.role = 'Girl';
+
         const newGameState = { ...gameRoom.state, status: 'Started' };
         newGameState.storytime = `Good morning villagers. Welcome to a new match of Witch-Hunt!`;
 
