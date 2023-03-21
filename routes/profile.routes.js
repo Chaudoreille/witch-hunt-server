@@ -18,7 +18,7 @@ router.patch("/",
       const { username, email, image, password, newPassword } = req.body;
       const update = { username, email, image };
 
-      const user = await User.findById(req.user._id, {password: 1});
+      const user = await User.findById(req.user._id, { password: 1 });
 
       if (newPassword || email) {
         if (!password || !bcrypt.compareSync(password, user.password)) {
@@ -54,7 +54,7 @@ router.patch("/",
 router.delete("/", requiredFields("password"), async (req, res, next) => {
   try {
     // NOTE: cascade deletion on messages & clean user from room if problems arise.
-    const user = await User.findById(req.user._id, {password: 1});
+    const user = await User.findById(req.user._id, { password: 1 });
 
     if (!bcrypt.compareSync(req.body.password, user.password)) {
       return res.status(401).json({ message: "Invalid password" });
