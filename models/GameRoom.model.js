@@ -53,29 +53,29 @@ const gameRoomSchema = new Schema(
           },
           state: {
             type: String,
-            enum: { cast: "Cast", locked: "Locked", null:null }
+            enum: { cast: "Cast", locked: "Locked", null: null }
           }
         },
         role: {
           type: String,
-          enum: {villager: 'Villager', witch: 'Witch'},
+          enum: { villager: 'Villager', witch: 'Witch', girl: "Girl" },
           default: 'Villager',
         },
         team: {
           type: String,
-          enum: {villager: 'Villagers', witch: 'Witches'},
+          enum: { villager: 'Villagers', witch: 'Witches' },
           default: 'Villagers',
         },
 
       }],
       mode: {
         type: String,
-        enum: {day: 'Daytime', night: 'Nighttime'},
+        enum: { day: 'Daytime', night: 'Nighttime' },
         default: 'Daytime',
       },
       winners: {
         type: String,
-        enum: {villager: 'Villagers', witch: 'Witches', null: null},
+        enum: { villager: 'Villagers', witch: 'Witches', null: null },
         default: null,
       },
       storytime: {
