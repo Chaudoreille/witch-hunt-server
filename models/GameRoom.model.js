@@ -58,7 +58,7 @@ const gameRoomSchema = new Schema(
         },
         role: {
           type: String,
-          enum: { villager: 'Villager', witch: 'Witch', girl: "Girl" },
+          enum: { villager: 'Villager', witch: 'Witch', girl: "Girl", priest: "Priest" },
           default: 'Villager',
         },
         team: {

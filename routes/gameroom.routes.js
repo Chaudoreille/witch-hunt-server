@@ -1,5 +1,4 @@
 const express = require("express");
-const { isValidObjectId } = require("mongoose");
 const router = express.Router();
 
 const { isAuthenticated } = require("../middleware/auth.middleware");
