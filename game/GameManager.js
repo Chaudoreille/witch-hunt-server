@@ -414,7 +414,6 @@ class GameManager {
         // If it's a tie, or the priest saved the witch's target; gameState stays the same
         if (maxVoted.length > 1 || victim.user._id.equals(blessing)) {
             gameState.storytime = 'As the morning dawns, you feel a sense of relief. All villagers are accounted for!';
-            return gameState;
         } else {
             victim.status = 'Dead';
             gameState.storytime = `As the morning dawns and the villagers leave their huts, one door remains closed. ${victim.user.username} was murdered in the night!`;
