@@ -156,19 +156,20 @@ class GameManager {
      */
     actionCastVote(user, gameState, parameters) {
         const [targetId] = parameters;
+        const nightVoters = ['Witch', 'Priest'];
 
         // validation steps: 
         // v1 verify the game is active
         if (gameState.status !== 'Started') return { error: 'Game is not currently active, you cannot cast your vote at this time!' };
 
         // v2 verify user is an eligible voter (must be part of the game and alive)
-        const currentPlayer = gameState.players.filter(player => {
+        const currentPlayer = gameState.players.find(player => {
             return player.user._id.equals(user._id);
-        })[0];
+        });
         if (!currentPlayer || currentPlayer.status !== 'Alive') return { error: 'Only living players may participate in the vote!' };
 
-        // v3 at night only witches can vote
-        if (gameState.mode === 'Nighttime' && currentPlayer.role !== 'Witch') return { error: 'You are not eligible to vote during the night!' };
+        // v4 at night only nightVoters can vote
+        if (gameState.mode === 'Nighttime' && !nightVoters.includes(currentPlayer.role)) return { error: 'You are not eligible to vote during the night!' };
 
         // v4 verify user has not yet locked his vote
         if (currentPlayer.vote.state === 'Locked') return { error: 'You already locked your vote for this round!' };
@@ -215,6 +216,17 @@ class GameManager {
     actionStartGame(user, gameRoom) {
         const players = gameRoom.state.players;
         const playerCount = players.length;
+
+        const assignRole = (number, role, team = 'Villagers') => {
+            for (let i = 0; i < number; i++) {
+                const villagers = players.filter(player => player.role === 'Villager');
+
+                const randomVillager = villagers[Math.floor(Math.random() * villagers.length)];
+                randomVillager.role = role;
+                randomVillager.team = team;
+            }
+        };
+
         if (!user._id.equals(gameRoom.owner._id)) return { error: 'Only the owner can start the game!' };
         if (gameRoom.state.status !== 'Lobby') return { error: 'Game was already started!' };
         if (playerCount < this.GAME_DATA.minPlayers) return { error: `Need at least ${this.GAME_DATA.minPlayers} players to start the game!` };
@@ -222,17 +234,15 @@ class GameManager {
 
         // Pick witches, amount depends on the player count - 3-6 players, 1 witch, 7-10: 2 witches, 11-14: 3 witches and so on
         const witchCount = Math.floor((playerCount - 3) / 4 + 1);
-        for (let i = 0; i < witchCount; i++) {
-            const options = players.filter(player => player.role === 'Villager');
-            const newWitch = options[Math.floor(Math.random() * options.length)];
-            newWitch.role = 'Witch';
-            newWitch.team = 'Witches';
-        }
+        assignRole(witchCount, 'Witch', 'Witches');
 
         // Pick little girl, one per game, amongst villagers
-        const options = players.filter(player => player.role === 'Villager');
-        const littleGirl = options[Math.floor(Math.random() * options.length)];
-        littleGirl.role = 'Girl';
+        assignRole(1, 'Girl', 'Villagers');
+
+        // Pick little girl, one per game, amongst villagers
+        if (playerCount > 3) {
+            assignRole(1, 'Priest', 'Villagers');
+        }
 
         const newGameState = { ...gameRoom.state, status: 'Started' };
         newGameState.storytime = `Good morning villagers. Welcome to a new match of Witch-Hunt!`;
@@ -313,6 +323,9 @@ class GameManager {
             case 'Witch':
                 gameState.storytime += 'Congratulations villagers, there is one less witch among you!';
                 break;
+            case 'Priest':
+                gameState.storytime += `Unfortunately, ${victim.user.username} was a priest, protecting the village from evil forces. As you stare at their remains, you feel more vulnerable than ever.`;
+                break;
             case 'Girl':
                 gameState.storytime += `Unfortunately, ${victim.user.username} was an innocent child. As you stare at her tiny remains, you can feel the witches among you grow in power.`;
                 break;
@@ -364,8 +377,10 @@ class GameManager {
     * @returns boolean
     */
     checkForEndOfNight(gameState) {
-        // the night continues as long as some Witches that are still alive have not locked their vote
-        return !(gameState.players.some(player => (((player.status === 'Alive') && (player.role === 'Witch') && (player.vote.state !== 'Locked')))));
+        const nightVoters = ['Witch', 'Priest'];
+
+        // the night continues as long as some night voters that are still alive have not locked their vote
+        return !(gameState.players.some(player => (((player.status === 'Alive') && nightVoters.includes(player.role) && (player.vote.state !== 'Locked')))));
     }
 
     /**
@@ -376,7 +391,14 @@ class GameManager {
      * @returns GameState (also mutates gameState in place!)
      */
     handleEndOfNight(gameState) {
-        const votes = gameState.players.map(player => player.vote.target).filter(vote => vote !== null);
+        const priest = gameState.players.find(player => player.status === 'Alive' && player.role === 'Priest');
+        const blessing = priest?.vote.target;
+
+        const votes = gameState.players
+            .filter(player => player.role === 'Witch')
+            .map(player => player.vote.target)
+            .filter(vote => vote !== null);
+
         votes.sort();
         const voteCount = votes.reduce((previous, target) => {
             previous[target] ??= 0;
@@ -387,15 +409,16 @@ class GameManager {
         const maxVotes = Math.max(...Object.values(voteCount));
         const maxVoted = gameState.players.filter(player => voteCount[player.user._id] === maxVotes);
 
-        // If it's a tie, gameState stays the same
-        if (maxVoted.length > 1) {
-            gameState.storytime = 'As the morning dawns, you feel a sense of relieve. All villagers are accounted for!';
-            return gameState;
-        }
-
         const victim = maxVoted[0];
-        victim.status = 'Dead';
-        gameState.storytime = `As the morning dawns and the villagers leave their huts, one door remains closed. ${victim.user.username} was murdered in the night!`;
+
+        // If it's a tie, or the priest saved the witch's target; gameState stays the same
+        if (maxVoted.length > 1 || victim.user._id.equals(blessing)) {
+            gameState.storytime = 'As the morning dawns, you feel a sense of relief. All villagers are accounted for!';
+            return gameState;
+        } else {
+            victim.status = 'Dead';
+            gameState.storytime = `As the morning dawns and the villagers leave their huts, one door remains closed. ${victim.user.username} was murdered in the night!`;
+        }
         return gameState;
     }
 }
